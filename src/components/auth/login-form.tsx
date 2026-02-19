@@ -80,7 +80,7 @@ export const LoginForm = () => {
             </CardContent>
             <CardFooter>
                 <Button variant="link" className="font-normal w-full" size="sm" asChild>
-                    <Link href="/register">
+                    <Link href={callbackUrl ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/register"}>
                         Don't have an account?
                     </Link>
                 </Button>

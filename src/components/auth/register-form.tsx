@@ -87,7 +87,7 @@ export const RegisterForm = () => {
             </CardContent>
             <CardFooter>
                 <Button variant="link" className="font-normal w-full" size="sm" asChild>
-                    <Link href="/login">
+                    <Link href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login"}>
                         Already have an account?
                     </Link>
                 </Button>
