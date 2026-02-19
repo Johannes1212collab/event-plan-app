@@ -154,7 +154,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     toast.success(`Uploaded ${file.name}`, { id: toastId });
                 } catch (err) {
                     console.error(`Failed to upload file: ${file.name}`, err);
-                    toast.error(`Failed: ${file.name}`, { id: toastId });
+                    toast.error(`Failed: ${file.name} - ${(err as Error).message}`, { id: toastId });
                 }
             }
 
