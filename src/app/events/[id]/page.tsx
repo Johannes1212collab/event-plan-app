@@ -46,84 +46,79 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                     <Link href="/dashboard" className="flex items-center gap-x-2 font-bold text-lg hover:opacity-80 transition-opacity">
                         &larr; Back
                     </Link>
-                    <div className="flex items-center gap-x-4">
-                        <span className="text-sm font-medium text-slate-700">
-                            {event.title}
-                        </span>
-                        <QRInvite />
-                    </div>
                 </div>
-            </header>
-
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Event Details */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{event.title}</CardTitle>
-                                <CardDescription>Hosted by {event.host.name}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center text-sm text-slate-600">
-                                    <Calendar className="h-4 w-4 mr-2" />
-                                    {new Date(event.date).toLocaleDateString()} at {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                                <div className="flex items-center text-sm text-slate-600">
-                                    <MapPin className="h-4 w-4 mr-2" />
-                                    {event.location || "Location TBD"}
-                                </div>
-                                <div className="flex items-start text-sm text-slate-600">
-                                    <span className="font-semibold mr-2">Description:</span>
-                                    <p>{event.description || "No description."}</p>
-                                </div>
-                                <div className="pt-4 border-t">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold uppercase text-slate-500">Invite Code</span>
-                                        <span className="text-sm font-mono bg-slate-100 px-2 py-1 rounded">{event.accessCode}</span>
-                                    </div>
-                                </div>
-                                {event.lat && event.lng && (
-                                    <div className="pt-4 border-t h-[200px] w-full rounded-md overflow-hidden">
-                                        <EventMap lat={event.lat} lng={event.lng} />
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Participants ({event.participants.length})</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-wrap gap-2">
-                                    {event.participants.map((p: any) => (
-                                        <div key={p.id} className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
-                                            <div className="h-6 w-6 rounded-full bg-slate-300 flex items-center justify-center text-xs font-bold">
-                                                {p.user.name?.[0] || "?"}
-                                            </div>
-                                            <span className="text-xs font-medium truncate max-w-[100px]">{p.user.name}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Media Gallery Section */}
-                        <MediaGallery initialMedia={eventMedia} />
-                    </div>
-
-                    {/* Chat Section */}
-                    <div className="lg:col-span-2">
-                        <Chat
-                            eventId={event.id}
-                            initialMessages={event.messages}
-                            currentUserId={session.user.id}
-                        />
-                    </div>
-                </div>
-            </main>
         </div>
+            </header >
+
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Event Details */}
+            <div className="lg:col-span-1 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{event.title}</CardTitle>
+                        <CardDescription>Hosted by {event.host.name}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center text-sm text-slate-600">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {new Date(event.date).toLocaleDateString()} at {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                            <MapPin className="h-4 w-4 mr-2" />
+                            {event.location || "Location TBD"}
+                        </div>
+                        <div className="flex items-start text-sm text-slate-600">
+                            <span className="font-semibold mr-2">Description:</span>
+                            <p>{event.description || "No description."}</p>
+                        </div>
+                        <div className="pt-4 border-t">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-700">Share Event</span>
+                                <QRInvite />
+                            </div>
+                        </div>
+                        {event.lat && event.lng && (
+                            <div className="pt-4 border-t h-[200px] w-full rounded-md overflow-hidden">
+                                <EventMap lat={event.lat} lng={event.lng} />
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Participants ({event.participants.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                            {event.participants.map((p: any) => (
+                                <div key={p.id} className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+                                    <div className="h-6 w-6 rounded-full bg-slate-300 flex items-center justify-center text-xs font-bold">
+                                        {p.user.name?.[0] || "?"}
+                                    </div>
+                                    <span className="text-xs font-medium truncate max-w-[100px]">{p.user.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Media Gallery Section */}
+                <MediaGallery initialMedia={eventMedia} />
+            </div>
+
+            {/* Chat Section */}
+            <div className="lg:col-span-2">
+                <Chat
+                    eventId={event.id}
+                    initialMessages={event.messages}
+                    currentUserId={session.user.id}
+                />
+            </div>
+        </div>
+    </main>
+        </div >
     );
 }
 
