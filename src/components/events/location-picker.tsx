@@ -69,7 +69,7 @@ export default function LocationPicker({
 
     return (
         <div className="space-y-4">
-            <div className="relative">
+            <div className="relative z-20">
                 <div className="relative">
                     <Input
                         value={query}
