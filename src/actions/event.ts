@@ -112,3 +112,42 @@ export const getEventById = async (id: string) => {
 
     return event;
 }
+
+export const getEventMedia = async (eventId: string) => {
+    const session = await auth();
+
+    if (!session || !session.user) {
+        return [];
+    }
+
+    try {
+        const mediaMessages = await db.message.findMany({
+            where: {
+                eventId,
+                NOT: {
+                    mediaUrl: null,
+                },
+            },
+            select: {
+                id: true,
+                mediaUrl: true,
+                mediaType: true,
+                createdAt: true,
+                sender: {
+                    select: {
+                        name: true,
+                        image: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        return mediaMessages;
+    } catch (error) {
+        console.error("Error fetching event media:", error);
+        return [];
+    }
+};

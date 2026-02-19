@@ -1,9 +1,10 @@
 
 import { auth, signOut } from "@/auth";
-import { getEventById } from "@/actions/event";
+import { getEventById, getEventMedia } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
 import { QRInvite } from "@/components/events/qr-invite";
 import { EventMap } from "@/components/events/event-map";
+import { MediaGallery } from "@/components/events/media-gallery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar, MapPin, User, LogOut, Share2 } from "lucide-react";
@@ -19,6 +20,7 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     }
 
     const event = await getEventById(id);
+    const eventMedia = await getEventMedia(id);
 
     if (!event) {
         return (
@@ -106,6 +108,9 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Media Gallery Section */}
+                        <MediaGallery initialMedia={eventMedia} />
                     </div>
 
                     {/* Chat Section */}
