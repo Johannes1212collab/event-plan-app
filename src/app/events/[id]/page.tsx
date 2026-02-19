@@ -2,6 +2,7 @@
 import { auth, signOut } from "@/auth";
 import { getEventById } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
+import { QRInvite } from "@/components/events/qr-invite";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar, MapPin, User, LogOut, Share2 } from "lucide-react";
@@ -46,6 +47,7 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                         <span className="text-sm font-medium text-slate-700">
                             {event.title}
                         </span>
+                        <QRInvite />
                     </div>
                 </div>
             </header>
