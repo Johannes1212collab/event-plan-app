@@ -151,3 +151,34 @@ export const getEventMedia = async (eventId: string) => {
         return [];
     }
 };
+
+export const deleteEvent = async (eventId: string) => {
+    const session = await auth();
+
+    if (!session || !session.user || !session.user.id) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const event = await db.event.findUnique({
+            where: { id: eventId },
+        });
+
+        if (!event) {
+            return { error: "Event not found" };
+        }
+
+        if (event.hostId !== session.user.id) {
+            return { error: "Only the host can delete this event" };
+        }
+
+        await db.event.delete({
+            where: { id: eventId },
+        });
+
+        return { success: "Event deleted" };
+    } catch (error) {
+        console.error("Error deleting event:", error);
+        return { error: "Failed to delete event" };
+    }
+};

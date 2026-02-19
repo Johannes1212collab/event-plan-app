@@ -11,6 +11,8 @@ import { Calendar, MapPin, User, LogOut, Share2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { DeleteEventButton } from "@/components/events/delete-event-button";
+
 const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
     const session = await auth();
@@ -39,6 +41,8 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     // We need a 'Join' flow if not participant. But let's keep it simple: if you see it, you can chat.
     // Or better: auto-join if you have the link?
 
+    // ... existing imports ...
+
     return (
         <div className="min-h-screen bg-slate-50">
             <header className="bg-white border-b sticky top-0 z-10">
@@ -46,8 +50,10 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                     <Link href="/dashboard" className="flex items-center gap-x-2 font-bold text-lg hover:opacity-80 transition-opacity">
                         &larr; Back
                     </Link>
+                    {session.user.id === event.hostId && (
+                        <DeleteEventButton eventId={event.id} />
+                    )}
                 </div>
-
             </header >
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
