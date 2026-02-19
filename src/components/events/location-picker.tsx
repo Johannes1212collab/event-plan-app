@@ -1,30 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { MapPin } from "lucide-react";
-import "leaflet/dist/leaflet.css";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
-import "leaflet-defaulticon-compatibility";
-
 import dynamic from "next/dynamic";
 
-// Dynamically import Leaflet components to avoid SSR issues
-const MapContainer = dynamic(
-    () => import("react-leaflet").then((mod) => mod.MapContainer),
-    { ssr: false }
-);
-const TileLayer = dynamic(
-    () => import("react-leaflet").then((mod) => mod.TileLayer),
-    { ssr: false }
-);
-const Marker = dynamic(
-    () => import("react-leaflet").then((mod) => mod.Marker),
-    { ssr: false }
-);
-const useMap = dynamic(
-    () => import("react-leaflet").then((mod) => mod.useMap),
-    { ssr: false }
+// Dynamically import the map component to avoid SSR issues
+const LeafletMap = dynamic(
+    () => import("@/components/events/leaflet-map"),
+    {
+        ssr: false,
+        loading: () => <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
+    }
 );
 
 interface Place {
@@ -32,13 +19,6 @@ interface Place {
     display_name: string;
     lat: string;
     lon: string;
-}
-
-// Helper component to move map center
-function ChangeView({ center }: { center: [number, number] }) {
-    const map = require("react-leaflet").useMap();
-    map.setView(center);
-    return null;
 }
 
 export default function LocationPicker({
@@ -57,6 +37,7 @@ export default function LocationPicker({
             if (query.length > 2) {
                 setIsSearching(true);
                 try {
+                    // Use OpenStreetMap Nominatim API
                     const response = await fetch(
                         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
                             query
@@ -115,24 +96,10 @@ export default function LocationPicker({
             </div>
 
             <div className="h-[200px] w-full rounded-md overflow-hidden border bg-slate-100 relative">
-                {/* We default to London if no selection, just to show a map */}
-                <MapContainer
+                <LeafletMap
                     center={selectedLocation || [51.505, -0.09]}
-                    zoom={13}
-                    scrollWheelZoom={false}
-                    style={{ height: "100%", width: "100%" }}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {selectedLocation && (
-                        <>
-                            <Marker position={selectedLocation} />
-                            <ChangeView center={selectedLocation} />
-                        </>
-                    )}
-                </MapContainer>
+                    markerPosition={selectedLocation || undefined}
+                />
             </div>
         </div>
     );
