@@ -116,37 +116,42 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
             const { upload } = await import('@vercel/blob/client');
 
             const uploadPromises = Array.from(files).map(async (file) => {
-                const newBlob = await upload(file.name, file, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload',
-                });
+                try {
+                    const newBlob = await upload(file.name, file, {
+                        access: 'public',
+                        handleUploadUrl: '/api/upload',
+                    });
 
-                // Send message with media
-                const optimisticMessage: Message = {
-                    id: Math.random().toString(),
-                    content: "",
-                    mediaUrl: newBlob.url,
-                    mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
-                    senderId: currentUserId,
-                    createdAt: new Date(),
-                    sender: {
-                        name: "You",
-                        image: null,
-                        id: currentUserId
-                    }
-                };
-                addOptimisticMessage(optimisticMessage);
-                await sendMessage({
-                    mediaUrl: newBlob.url,
-                    mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
-                    eventId
-                });
+                    // Send message with media
+                    const optimisticMessage: Message = {
+                        id: Math.random().toString(),
+                        content: "",
+                        mediaUrl: newBlob.url,
+                        mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                        senderId: currentUserId,
+                        createdAt: new Date(),
+                        sender: {
+                            name: "You",
+                            image: null,
+                            id: currentUserId
+                        }
+                    };
+                    addOptimisticMessage(optimisticMessage);
+                    await sendMessage({
+                        mediaUrl: newBlob.url,
+                        mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                        eventId
+                    });
+                } catch (err) {
+                    console.error(`Failed to upload file: ${file.name}`, err);
+                    // Could add a toast here for individual failure
+                }
             });
 
             await Promise.all(uploadPromises);
 
         } catch (error) {
-            console.error("Upload failed", error);
+            console.error("Critical upload error", error);
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";

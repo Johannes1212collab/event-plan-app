@@ -16,7 +16,10 @@ export async function POST(request: Request): Promise<NextResponse> {
                 }
 
                 return {
-                    allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'],
+                    allowedContentTypes: [
+                        'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff',
+                        'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo', 'video/x-matroska', 'video/3gpp'
+                    ],
                     tokenPayload: JSON.stringify({
                         userId: session.user.id,
                     }),
