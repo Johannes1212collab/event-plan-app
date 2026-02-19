@@ -124,10 +124,10 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 const toastId = toast.loading(`Uploading ${file.name}...`);
 
                 try {
-                    const newBlob = await upload(file.name, file, {
+                    const filename = `${file.name.split('.').slice(0, -1).join('.')}-${Math.random().toString(36).substring(2, 9)}.${file.name.split('.').pop()}`;
+                    const newBlob = await upload(filename, file, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
-                        addRandomSuffix: true, // Prevent filename collisions
                     });
 
                     // Send message with media
