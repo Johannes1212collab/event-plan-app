@@ -74,7 +74,7 @@ function MapSearch({
                 </div>
 
                 {status === "OK" && (
-                    <ul className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                    <ul className="absolute z-50 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
                         {data.map(({ place_id, description }) => (
                             <li
                                 key={place_id}
