@@ -81,6 +81,11 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                                         <span className="text-sm font-mono bg-slate-100 px-2 py-1 rounded">{event.accessCode}</span>
                                     </div>
                                 </div>
+                                {event.lat && event.lng && (
+                                    <div className="pt-4 border-t h-[200px] w-full rounded-md overflow-hidden">
+                                        <EventMap lat={event.lat} lng={event.lng} />
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
