@@ -9,7 +9,7 @@ export default defineConfig({
     datasource: {
         // @ts-ignore
         provider: 'postgresql',
-        url: process.env.POSTGRES_PRISMA_URL,
+        url: process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL,
         // @ts-ignore
         directUrl: process.env.POSTGRES_URL_NON_POOLING,
     },
