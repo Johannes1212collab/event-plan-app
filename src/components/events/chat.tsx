@@ -159,7 +159,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     };
 
     return (
-        <div className="flex flex-col h-[600px] border rounded-lg bg-white shadow-sm overflow-hidden">
+        <div className="flex flex-col h-[calc(100dvh-10rem)] md:h-[600px] border rounded-lg bg-white shadow-sm overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50" ref={scrollRef}>
                 {optimisticMessages.length === 0 && (
                     <div className="text-center text-slate-400 mt-10">
