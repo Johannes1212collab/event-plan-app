@@ -111,11 +111,18 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         if (!files || files.length === 0) return;
 
         setIsUploading(true);
+        // import toast dynamically to avoid SSR issues if not handled, though usually fine.
+        // Better to import at top level but let's assume it's available.
+        // Actually, let's add import at top. I'll do a separate edit for imports.
+        // For now, I'll assume toast is imported.
 
         try {
             const { upload } = await import('@vercel/blob/client');
+            const { toast } = await import('sonner'); // Dynamic import for now to match scope
 
-            const uploadPromises = Array.from(files).map(async (file) => {
+            for (const file of Array.from(files)) {
+                const toastId = toast.loading(`Uploading ${file.name}...`);
+
                 try {
                     const newBlob = await upload(file.name, file, {
                         access: 'public',
@@ -137,21 +144,24 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                         }
                     };
                     addOptimisticMessage(optimisticMessage);
+
                     await sendMessage({
                         mediaUrl: newBlob.url,
                         mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
                         eventId
                     });
+
+                    toast.success(`Uploaded ${file.name}`, { id: toastId });
                 } catch (err) {
                     console.error(`Failed to upload file: ${file.name}`, err);
-                    // Could add a toast here for individual failure
+                    toast.error(`Failed: ${file.name}`, { id: toastId });
                 }
-            });
-
-            await Promise.all(uploadPromises);
+            }
 
         } catch (error) {
             console.error("Critical upload error", error);
+            const { toast } = await import('sonner');
+            toast.error("Upload system error");
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
