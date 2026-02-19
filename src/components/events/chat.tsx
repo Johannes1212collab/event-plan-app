@@ -127,6 +127,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     const newBlob = await upload(file.name, file, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
+                        addRandomSuffix: true, // Prevent filename collisions
                     });
 
                     // Send message with media
