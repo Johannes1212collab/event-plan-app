@@ -1,30 +1,38 @@
-
-import { put } from '@vercel/blob';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth'; // Assuming auth is available
 
 export async function POST(request: Request): Promise<NextResponse> {
-    const { searchParams } = new URL(request.url);
-    const filename = searchParams.get('filename');
-
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-        return NextResponse.json({ success: false, message: 'No file uploaded' }, { status: 400 });
-    }
+    const body = (await request.json()) as HandleUploadBody;
 
     try {
-        const blob = await put(file.name, file, {
-            access: 'public',
+        const jsonResponse = await handleUpload({
+            body,
+            request,
+            onBeforeGenerateToken: async (pathname) => {
+                const session = await auth();
+                if (!session?.user) {
+                    throw new Error('Unauthorized');
+                }
+
+                return {
+                    allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'],
+                    tokenPayload: JSON.stringify({
+                        userId: session.user.id,
+                    }),
+                };
+            },
+            onUploadCompleted: async ({ blob, tokenPayload }) => {
+                // Optional: Could verify upload here, but we trust the client flow for now
+                console.log('Upload completed:', blob.url);
+            },
         });
 
-        return NextResponse.json({
-            success: true,
-            url: blob.url,
-            type: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO'
-        });
+        return NextResponse.json(jsonResponse);
     } catch (error) {
-        console.error("Upload error:", error);
-        return NextResponse.json({ success: false, message: 'Upload failed' }, { status: 500 });
+        return NextResponse.json(
+            { error: (error as Error).message },
+            { status: 400 },
+        );
     }
 }
