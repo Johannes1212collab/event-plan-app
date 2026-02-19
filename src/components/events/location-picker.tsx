@@ -69,7 +69,7 @@ export default function LocationPicker({
 
     return (
         <div className="space-y-4">
-            <div className="relative z-20">
+            <div className="relative z-[9999]">
                 <div className="relative">
                     <Input
                         value={query}
@@ -81,7 +81,7 @@ export default function LocationPicker({
                 </div>
 
                 {suggestions.length > 0 && (
-                    <ul className="absolute z-50 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                    <ul className="absolute z-[10000] w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
                         {suggestions.map((place) => (
                             <li
                                 key={place.place_id}
