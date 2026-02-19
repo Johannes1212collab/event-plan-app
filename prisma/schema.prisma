@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  hostedEvents  Event[]       @relation("HostedEvents")
+  participating Participant[]
+  messages      Message[]
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  accessCode  String   @unique @default(cuid()) // Simple invite code
+  hostId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  host         User          @relation("HostedEvents", fields: [hostId], references: [id], onDelete: Cascade)
+  participants Participant[]
+  messages     Message[]
+}
+
+model Participant {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  role      String   @default("GUEST") // HOST, GUEST
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String?
+  mediaUrl  String?
+  mediaType String? // IMAGE, VIDEO
+  eventId   String
+  senderId  String
+  createdAt DateTime @default(now())
+
+  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
