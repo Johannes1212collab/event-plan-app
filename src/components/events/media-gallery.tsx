@@ -77,7 +77,11 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                                     asChild
                                     className="w-full h-8 text-xs bg-white/90 hover:bg-white"
                                 >
-                                    <a href={item.mediaUrl!} download target="_blank" rel="noopener noreferrer">
+                                    <a
+                                        href={`/api/download?url=${encodeURIComponent(item.mediaUrl!)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         <Download className="h-3 w-3 mr-1" />
                                         Download
                                     </a>
