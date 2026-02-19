@@ -1,29 +1,40 @@
 "use client";
 
-import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
-import { MapPin } from "lucide-react";
+import "leaflet/dist/leaflet.css";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import "leaflet-defaulticon-compatibility";
+import dynamic from "next/dynamic";
 
-const libraries: ("places")[] = ["places"];
+const MapContainer = dynamic(
+    () => import("react-leaflet").then((mod) => mod.MapContainer),
+    { ssr: false }
+);
+const TileLayer = dynamic(
+    () => import("react-leaflet").then((mod) => mod.TileLayer),
+    { ssr: false }
+);
+const Marker = dynamic(
+    () => import("react-leaflet").then((mod) => mod.Marker),
+    { ssr: false }
+);
 
 export function EventMap({ lat, lng }: { lat: number; lng: number }) {
-    const { isLoaded } = useLoadScript({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-        libraries: libraries,
-    });
-
-    if (!isLoaded || !lat || !lng) return <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400"><MapPin className="h-8 w-8" /></div>;
+    if (!lat || !lng) return null;
 
     return (
-        <GoogleMap
+        <MapContainer
+            center={[lat, lng]}
             zoom={15}
-            center={{ lat, lng }}
-            mapContainerClassName="w-full h-full"
-            options={{
-                disableDefaultUI: true,
-                zoomControl: true,
-            }}
+            scrollWheelZoom={false}
+            style={{ height: "100%", width: "100%" }}
+            dragging={false} // Read-only feel
+            zoomControl={false}
         >
-            <Marker position={{ lat, lng }} />
-        </GoogleMap>
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={[lat, lng]} />
+        </MapContainer>
     );
 }
