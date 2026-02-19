@@ -74,7 +74,7 @@ const DashboardPage = async () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {events.map((event) => (
+                        {events.map((event: any) => (
                             <Card key={event.id} className="group hover:border-black/50 transition-colors cursor-pointer">
                                 <Link href={`/events/${event.id}`}>
                                     <CardHeader>

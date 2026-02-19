@@ -87,7 +87,7 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
-                                    {event.participants.map((p) => (
+                                    {event.participants.map((p: any) => (
                                         <div key={p.id} className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
                                             <div className="h-6 w-6 rounded-full bg-slate-300 flex items-center justify-center text-xs font-bold">
                                                 {p.user.name?.[0] || "?"}
