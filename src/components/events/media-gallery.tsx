@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileImage, FileVideo, User } from "lucide-react";
+import { Download, FileImage, FileVideo, User, Check, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface MediaItem {
     id: string;
@@ -24,6 +25,62 @@ interface MediaItem {
 }
 
 export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const toggleSelection = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const toggleAll = () => {
+        if (selectedIds.size === initialMedia.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(initialMedia.map(m => m.id)));
+        }
+    };
+
+    const handleBatchDownload = async () => {
+        if (selectedIds.size === 0) return;
+
+        setIsDownloading(true);
+        const toastId = toast.loading(`Preparing to download ${selectedIds.size} files...`);
+        let successCount = 0;
+
+        try {
+            for (const id of selectedIds) {
+                const item = initialMedia.find(m => m.id === id);
+                if (item?.mediaUrl) {
+                    const link = document.createElement('a');
+                    link.href = `/api/download?url=${encodeURIComponent(item.mediaUrl)}`;
+                    link.download = ''; // Browser handles filename from header
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Small delay to prevent browser throttling
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    successCount++;
+                }
+            }
+            toast.success(`Downloaded ${successCount} files`, { id: toastId });
+        } catch (error) {
+            console.error("Batch download error:", error);
+            toast.error("Some downloads failed", { id: toastId });
+        } finally {
+            setIsDownloading(false);
+            setIsSelectionMode(false);
+            setSelectedIds(new Set());
+        }
+    };
+
     if (initialMedia.length === 0) {
         return (
             <Card>
@@ -41,16 +98,45 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Media Gallery</CardTitle>
-                <CardDescription>
-                    {initialMedia.length} {initialMedia.length === 1 ? "file" : "files"} shared
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                    <CardTitle>Media Gallery</CardTitle>
+                    <CardDescription>
+                        {initialMedia.length} {initialMedia.length === 1 ? "file" : "files"} shared
+                    </CardDescription>
+                </div>
+                {!isSelectionMode ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsSelectionMode(true)}>
+                        Select
+                    </Button>
+                ) : (
+                    <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}>
+                            Cancel
+                        </Button>
+                        <Button size="sm" onClick={handleBatchDownload} disabled={selectedIds.size === 0 || isDownloading}>
+                            {isDownloading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                            Download ({selectedIds.size})
+                        </Button>
+                    </div>
+                )}
             </CardHeader>
             <CardContent>
+                {isSelectionMode && (
+                    <div className="mb-4 flex items-center justify-between">
+                        <Button variant="link" size="sm" className="p-0 h-auto" onClick={toggleAll}>
+                            {selectedIds.size === initialMedia.length ? "Deselect All" : "Select All"}
+                        </Button>
+                        <span className="text-sm text-slate-500">{selectedIds.size} selected</span>
+                    </div>
+                )}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {initialMedia.map((item) => (
-                        <div key={item.id} className="group relative aspect-square bg-slate-100 rounded-lg overflow-hidden border">
+                        <div
+                            key={item.id}
+                            className={`group relative aspect-square bg-slate-100 rounded-lg overflow-hidden border cursor-pointer ${isSelectionMode && selectedIds.has(item.id) ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                            onClick={() => isSelectionMode && toggleSelection(item.id)}
+                        >
                             {item.mediaType === "IMAGE" ? (
                                 <Image
                                     src={item.mediaUrl!}
@@ -65,31 +151,43 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                                 />
                             )}
 
-                            {/* Overlay */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                                <div className="text-white text-xs flex items-center gap-1">
-                                    <User className="h-3 w-3" />
-                                    <span className="truncate">{item.sender.name || "Unknown"}</span>
+                            {/* Selection Overlay */}
+                            {isSelectionMode && (
+                                <div className={`absolute inset-0 bg-black/20 transition-opacity flex items-start justify-end p-2 ${selectedIds.has(item.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${selectedIds.has(item.id) ? 'bg-primary border-primary text-white' : 'bg-white/50 border-white'}`}>
+                                        {selectedIds.has(item.id) && <Check className="h-4 w-4" />}
+                                    </div>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    asChild
-                                    className="w-full h-8 text-xs bg-white/90 hover:bg-white"
-                                >
-                                    <a
-                                        href={`/api/download?url=${encodeURIComponent(item.mediaUrl!)}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                            )}
+
+                            {/* Default Overlay (Only when NOT in selection mode) */}
+                            {!isSelectionMode && (
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                                    <div className="text-white text-xs flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        <span className="truncate">{item.sender.name || "Unknown"}</span>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        asChild
+                                        className="w-full h-8 text-xs bg-white/90 hover:bg-white"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        <Download className="h-3 w-3 mr-1" />
-                                        Download
-                                    </a>
-                                </Button>
-                            </div>
+                                        <a
+                                            href={`/api/download?url=${encodeURIComponent(item.mediaUrl!)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <Download className="h-3 w-3 mr-1" />
+                                            Download
+                                        </a>
+                                    </Button>
+                                </div>
+                            )}
 
                             {/* Type Icon Badge */}
-                            <div className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-md opacity-70 group-hover:opacity-0 transition-opacity">
+                            <div className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-md opacity-70 group-hover:opacity-0 transition-opacity pointer-events-none">
                                 {item.mediaType === "IMAGE" ? (
                                     <FileImage className="h-3 w-3" />
                                 ) : (
