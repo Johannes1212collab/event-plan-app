@@ -37,7 +37,7 @@ export function QRInvite() {
                         Share this QR code with friends to let them join the event instantly.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex items-center justify-center p-6">
+                <div className="flex flex-col items-center justify-center p-6 space-y-4">
                     <div className="bg-white p-4 rounded-lg shadow-sm border">
                         {url && (
                             <QRCode
@@ -47,6 +47,30 @@ export function QRInvite() {
                                 viewBox={`0 0 256 256`}
                             />
                         )}
+                    </div>
+                    <div className="flex items-center space-x-2 w-full">
+                        <div className="grid flex-1 gap-2">
+                            <label htmlFor="link" className="sr-only">
+                                Link
+                            </label>
+                            <input
+                                id="link"
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                value={url}
+                                readOnly
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            size="sm"
+                            className="px-3"
+                            onClick={() => {
+                                navigator.clipboard.writeText(url);
+                            }}
+                        >
+                            <span className="sr-only">Copy</span>
+                            Copy
+                        </Button>
                     </div>
                 </div>
             </DialogContent>
