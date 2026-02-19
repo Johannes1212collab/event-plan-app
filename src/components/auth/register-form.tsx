@@ -10,7 +10,11 @@ import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import Link from "next/link";
 
+import { useSearchParams } from "next/navigation";
+
 export const RegisterForm = () => {
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get("callbackUrl");
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
     const [isPending, startTransition] = useTransition();
@@ -24,7 +28,7 @@ export const RegisterForm = () => {
         const password = formData.get("password") as string;
 
         startTransition(() => {
-            register({ name, email, password })
+            register({ name, email, password, callbackUrl })
                 .then((data) => {
                     setError(data.error);
                     setSuccess(data.success);

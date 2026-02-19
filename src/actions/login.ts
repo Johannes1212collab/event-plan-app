@@ -4,7 +4,7 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 
 export const login = async (values: any) => {
-    const { email, password } = values;
+    const { email, password, callbackUrl } = values;
 
     if (!email || !password) {
         return { error: "Missing required fields!" };
@@ -14,7 +14,7 @@ export const login = async (values: any) => {
         await signIn("credentials", {
             email,
             password,
-            redirectTo: "/dashboard",
+            redirectTo: callbackUrl || "/dashboard",
         });
     } catch (error) {
         if (error instanceof AuthError) {

@@ -107,41 +107,43 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
         setIsUploading(true);
 
-        // Dynamic import to avoid SSR issues with client-side only libraries if any (though vercel/blob/client is fine usually)
-        // Adding it here just to be safe and clean
         try {
             const { upload } = await import('@vercel/blob/client');
 
-            const newBlob = await upload(file.name, file, {
-                access: 'public',
-                handleUploadUrl: '/api/upload',
+            const uploadPromises = Array.from(files).map(async (file) => {
+                const newBlob = await upload(file.name, file, {
+                    access: 'public',
+                    handleUploadUrl: '/api/upload',
+                });
+
+                // Send message with media
+                const optimisticMessage: Message = {
+                    id: Math.random().toString(),
+                    content: "",
+                    mediaUrl: newBlob.url,
+                    mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                    senderId: currentUserId,
+                    createdAt: new Date(),
+                    sender: {
+                        name: "You",
+                        image: null,
+                        id: currentUserId
+                    }
+                };
+                addOptimisticMessage(optimisticMessage);
+                await sendMessage({
+                    mediaUrl: newBlob.url,
+                    mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                    eventId
+                });
             });
 
-            // Send message with media
-            const optimisticMessage: Message = {
-                id: Math.random().toString(),
-                content: "",
-                mediaUrl: newBlob.url,
-                mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
-                senderId: currentUserId,
-                createdAt: new Date(),
-                sender: {
-                    name: "You",
-                    image: null,
-                    id: currentUserId
-                }
-            };
-            addOptimisticMessage(optimisticMessage);
-            await sendMessage({
-                mediaUrl: newBlob.url,
-                mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
-                eventId
-            });
+            await Promise.all(uploadPromises);
 
         } catch (error) {
             console.error("Upload failed", error);
@@ -199,6 +201,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                         ref={fileInputRef}
                         className="hidden"
                         accept="image/*,video/*"
+                        multiple
                         onChange={handleUpload}
                     />
                     <Input

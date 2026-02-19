@@ -16,7 +16,7 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     const session = await auth();
 
     if (!session?.user || !session.user.id) {
-        redirect("/login");
+        redirect(`/login?callbackUrl=/events/${id}`);
     }
 
     const event = await getEventById(id);
