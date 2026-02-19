@@ -13,7 +13,7 @@ export const createEvent = async (values: any) => {
         return { error: "Unauthorized" };
     }
 
-    const { title, description, date, location } = values;
+    const { title, description, date, location, lat, lng } = values;
 
     if (!title || !date) {
         return { error: "Title and Date are required!" };
@@ -26,6 +26,8 @@ export const createEvent = async (values: any) => {
                 description,
                 date: new Date(date),
                 location,
+                lat,
+                lng,
                 hostId: session.user.id,
                 participants: {
                     create: {

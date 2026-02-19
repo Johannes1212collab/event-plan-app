@@ -30,6 +30,8 @@ model Event {
   description String?
   date        DateTime
   location    String?
+  lat         Float?
+  lng         Float?
   accessCode  String   @unique @default(cuid()) // Simple invite code
   hostId      String
   createdAt   DateTime @default(now())

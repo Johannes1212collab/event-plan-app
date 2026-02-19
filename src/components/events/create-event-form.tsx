@@ -12,10 +12,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+import LocationPicker from "@/components/events/location-picker";
+
 export const CreateEventForm = () => {
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
     const [isPending, startTransition] = useTransition();
+    const [locationData, setLocationData] = useState<{ address: string; lat: number; lng: number } | null>(null);
     const router = useRouter();
 
     const onSubmit = (formData: FormData) => {
@@ -25,10 +28,13 @@ export const CreateEventForm = () => {
         const title = formData.get("title") as string;
         const description = formData.get("description") as string;
         const date = formData.get("date") as string;
-        const location = formData.get("location") as string;
+        // Use location from state if available, otherwise form data (fallback) -> actually just override with state if present
+        const location = locationData ? locationData.address : (formData.get("location") as string);
+        const lat = locationData?.lat;
+        const lng = locationData?.lng;
 
         startTransition(() => {
-            createEvent({ title, description, date, location })
+            createEvent({ title, description, date, location, lat, lng })
                 .then((data) => {
                     if (data.error) {
                         setError(data.error);
@@ -86,14 +92,11 @@ export const CreateEventForm = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="location" className="text-sm font-medium">Location</label>
-                                <Input
-                                    id="location"
-                                    name="location"
-                                    disabled={isPending}
-                                    placeholder="123 Main St"
-                                    type="text"
+                                <label className="text-sm font-medium">Location</label>
+                                <LocationPicker
+                                    onLocationSelect={(address, lat, lng) => setLocationData({ address, lat, lng })}
                                 />
+                                <input type="hidden" name="location" value={locationData?.address || ""} />
                             </div>
                         </div>
                     </div>

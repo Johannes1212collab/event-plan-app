@@ -3,6 +3,7 @@ import { auth, signOut } from "@/auth";
 import { getEventById } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
 import { QRInvite } from "@/components/events/qr-invite";
+import { EventMap } from "@/components/events/event-map";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar, MapPin, User, LogOut, Share2 } from "lucide-react";
