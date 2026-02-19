@@ -14,8 +14,9 @@ export default async function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center">
-        <Link className="flex items-center justify-center font-bold" href="#">
-          EventHub
+        <Link className="flex items-center justify-center gap-2" href="#">
+          <div className="h-8 w-8 bg-black rounded-lg text-white flex items-center justify-center font-bold">EH</div>
+          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">EventHub</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="/login">
