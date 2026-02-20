@@ -36,18 +36,17 @@ const DashboardPage = async () => {
                         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">EventHub</h1>
                     </Link>
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="flex items-center gap-x-2 sm:gap-x-4">
                         <ShareSiteButton />
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-slate-700 truncate max-w-[100px] sm:max-w-none">
                             {session.user.name}
                         </span>
                         <form action={async () => {
                             "use server";
                             await signOut({ redirectTo: "/login" });
                         }}>
-                            <Button variant="ghost" size="sm">
-                                <LogOut className="h-4 w-4 mr-2" />
-                                Sign Out
+                            <Button variant="ghost" size="icon" title="Sign Out">
+                                <LogOut className="h-4 w-4" />
                             </Button>
                         </form>
                     </div>
