@@ -187,8 +187,12 @@ export async function GET(request: NextRequest) {
         });
         */
 
-        // MINIMAL TEST 4: Flattened data access
-        const hostName = event.host?.name || 'Unknown Host';
+        // MINIMAL TEST 5: Hardcoded String (Testing JSX Structure)
+        // const hostName = event.host?.name || 'Unknown Host';
+        const hostName = "HARDCODED HOST TEST"; // If this works, the variable 'event.host.name' is toxic.
+
+        console.log(`[OG] Real Host Variable: ${event.host?.name}`); // Verify access doesn't crash JS logic
+
         const titleSafe = event.title || 'Untitled Event';
 
         return new ImageResponse(
