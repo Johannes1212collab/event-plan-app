@@ -41,11 +41,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         openGraph: {
             title: event.title,
             description: description,
-            url: `https://eventhub.community/events/${event.id}`,
+            url: `/events/${event.id}`,
             siteName: "EventHub",
             images: [
                 {
-                    url: `https://eventhub.community/api/og?eventId=${event.id}`,
+                    url: `/api/og?eventId=${event.id}`,
                     width: 1200,
                     height: 630,
                     alt: event.title,
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             card: "summary_large_image",
             title: event.title,
             description: description,
-            images: [`https://eventhub.community/api/og?eventId=${event.id}`],
+            images: [`/api/og?eventId=${event.id}`],
         },
     }
 }
