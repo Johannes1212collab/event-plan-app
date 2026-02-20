@@ -1,138 +1,75 @@
 import { ImageResponse } from 'next/og';
-import db from '@/lib/db';
+// import db from '@/lib/db'; // TEMPORARILY DISABLED TO TEST MODULE LOAD
 import { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } = request.nextUrl;
         const rawEventId = searchParams.get('eventId');
         const eventId = rawEventId?.trim();
 
+        // TRACE MODE: Return early if specific trace requested
+        if (eventId === 'trace_start') {
+            return new ImageResponse(
+                (<div style={{ fontSize: 30, background: 'white' }}>Trace: Start OK (No DB)</div>),
+                { width: 600, height: 300 }
+            );
+        }
+
         if (eventId === 'debug') {
             return new ImageResponse(
-                (
-                    <div
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fff',
-                            fontSize: 32,
-                            fontWeight: 600,
-                        }}
-                    >
-                        EventHub: Debug Success
-                    </div>
-                ),
-                {
-                    width: 1200,
-                    height: 630,
-                }
+                (<div style={{ fontSize: 30, background: 'white', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>EventHub: Debug Success</div>),
+                { width: 1200, height: 630 }
             );
         }
 
         if (!eventId) {
             return new ImageResponse(
-                (
-                    <div
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fff',
-                            fontSize: 32,
-                            fontWeight: 600,
-                        }}
-                    >
-                        EventHub: Missing Event ID
-                    </div>
-                ),
-                {
-                    width: 1200,
-                    height: 630,
-                }
+                (<div style={{ fontSize: 30, background: 'white' }}>Missing Event ID (Parsed OK)</div>),
+                { width: 600, height: 300 }
             );
         }
+
+        // DB CHECK
+        // if (!db) {
+        //     throw new Error("Database client (db) is undefined");
+        // }
 
         console.log(`[OG] Fetching event: ${eventId}`);
 
-        let event;
-        try {
-            event = await db.event.findUnique({
-                where: { id: eventId },
-                include: { host: true },
-            });
-        } catch (dbError: any) {
-            console.error(`[OG] DB Error (FindUnique): ${dbError.message}`, dbError);
-            return new ImageResponse(
-                (
-                    <div
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fee2e2',
-                            color: '#991b1b',
-                            fontSize: 24,
-                            fontWeight: 600,
-                            padding: 40,
-                            textAlign: 'center',
-                        }}
-                    >
-                        <div>EventHub: Database Error</div>
-                        <div style={{ fontSize: 16, marginTop: 20, maxWidth: '80%', wordBreak: 'break-all' }}>
-                            {dbError.name}: {dbError.message}
-                        </div>
-                    </div>
-                ),
-                {
-                    width: 1200,
-                    height: 630,
-                }
-            );
-        }
+        // MOCK DATA FOR INFRASTRUCTURE TEST
+        const event = {
+            title: "Test Event (DB Disabled)",
+            date: new Date(),
+            host: { name: "Test Host" }
+        };
+
+        // let event;
+        // try {
+        //     event = await db.event.findUnique({
+        //         where: { id: eventId },
+        //         include: { host: true },
+        //     });
+        // } catch (innerDbError: any) {
+        //     console.error('[OG] Inner DB Error:', innerDbError);
+        //     throw new Error(`DB Query Failed: ${innerDbError.message}`);
+        // }
 
         if (!event) {
-            console.error(`[OG] Event not found: ${eventId} (Len: ${eventId.length})`);
+            console.error(`[OG] Event not found: ${eventId}`);
             return new ImageResponse(
                 (
-                    <div
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fff',
-                            fontSize: 32,
-                            fontWeight: 600,
-                            padding: 40,
-                            textAlign: 'center',
-                        }}
-                    >
-                        <div>EventHub: Event Not Found</div>
-                        <div style={{ fontSize: 24, marginTop: 20, color: '#666' }}>
-                            ID: {eventId}
-                        </div>
-                        <div style={{ fontSize: 16, marginTop: 10, color: '#999' }}>
-                            Direct DB access (Safe Revert)
-                        </div>
+                    <div style={{
+                        width: '100%', height: '100%', background: 'white',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <h1>Event Not Found</h1>
+                        <p>ID: {eventId}</p>
                     </div>
                 ),
-                {
-                    width: 1200,
-                    height: 630,
-                }
+                { width: 1200, height: 630 }
             );
         }
 
