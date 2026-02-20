@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         openGraph: {
             title: event.title,
             description: `Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 100) + "..." : ""}`,
+            images: [`/events/${event.id}/opengraph-image`],
             // url is automatically handled relative to metadataBase in layout.tsx
         }
     }
