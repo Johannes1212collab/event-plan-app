@@ -32,8 +32,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     const eventDate = new Date(event.date);
     const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeStr = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const description = `${dateStr} at ${timeStr} • Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 50) + "..." : ""}`;
+    const timeStr = event.isFullDay ? '' : ` at ${eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+    const description = `${dateStr}${timeStr} • Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 50) + "..." : ""}`;
 
     return {
         title: `${event.title} - EventHub`,
@@ -138,7 +138,8 @@ const EventPage = async (props: EventPageProps) => {
                             <CardContent className="space-y-4">
                                 <div className="flex items-center text-sm text-slate-600">
                                     <Calendar className="h-4 w-4 mr-2" />
-                                    {new Date(event.date).toLocaleDateString()} at {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {new Date(event.date).toLocaleDateString()}
+                                    {!event.isFullDay && ` at ${new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                                 </div>
                                 <div className="flex items-center text-sm text-slate-600">
                                     <MapPin className="h-4 w-4 mr-2" />

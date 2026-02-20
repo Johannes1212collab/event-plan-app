@@ -14,6 +14,7 @@ export const getEventMetadata = async (id: string) => {
             title: true,
             description: true,
             date: true,
+            isFullDay: true,
             location: true,
             host: {
                 select: {
@@ -33,18 +34,29 @@ export const createEvent = async (values: any) => {
         return { error: "Unauthorized" };
     }
 
-    const { title, description, date, location, lat, lng } = values;
+    const { title, description, date, isFullDay, location, lat, lng } = values;
 
     if (!title || !date) {
         return { error: "Title and Date are required!" };
     }
+
+    // Default to false if isFullDay is undefined
+    const fullDay = isFullDay || false;
+
+    // If it's a full day, we just want the date part, but the browser sends "YYYY-MM-DD".
+    // We can parse it directly as a Date. It will be interpreted as midnight UTC.
+    let parsedDate = new Date(date);
+
+    // If it was just a date (length 10 like "2024-05-10"), the Date object is fine.
+    // If we wanted to ensure zero time, we could do it here, but Date(dateString) for YYYY-MM-DD does midnight UTC.
 
     try {
         const event = await db.event.create({
             data: {
                 title,
                 description,
-                date: new Date(date),
+                date: parsedDate,
+                isFullDay: fullDay,
                 location,
                 lat,
                 lng,

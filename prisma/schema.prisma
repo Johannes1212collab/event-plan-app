@@ -58,6 +58,7 @@ model Event {
   title       String
   description String?
   date        DateTime
+  isFullDay   Boolean  @default(false)
   location    String?
   lat         Float?
   lng         Float?

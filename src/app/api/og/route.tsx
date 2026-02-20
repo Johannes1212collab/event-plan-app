@@ -101,9 +101,8 @@ export async function GET(request: NextRequest) {
                 ssl: { rejectUnauthorized: false } // Typical for Serverless Postgres
             });
 
-            // Note: Prisma tables are usually "ModelName" (quoted). Fields are "fieldName" (quoted).
             const query = `
-                SELECT e."title", e."date", u."name" as "hostName"
+                SELECT e."title", e."date", e."isFullDay", u."name" as "hostName"
                 FROM "Event" e
                 LEFT JOIN "User" u ON e."hostId" = u."id"
                 WHERE e."id" = $1
@@ -118,6 +117,7 @@ export async function GET(request: NextRequest) {
                 event = {
                     title: row.title,
                     date: row.date,
+                    isFullDay: row.isFullDay,
                     host: { name: row.hostName }
                 };
                 console.log(`[OG] Event data found for ${eventId}:`, event);
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
                         gap: '12px',
                     }}>
                         {/* SAFE MODE: All text nodes wrapped in template literals */}
-                        <div style={{ fontSize: 36, fontWeight: 'bold', color: '#333' }}>{`${dateStr} at ${timeStr}`}</div>
+                        <div style={{ fontSize: 36, fontWeight: 'bold', color: '#333' }}>{`${event.isFullDay ? dateStr : `${dateStr} at ${timeStr}`}`}</div>
                         <div style={{ fontSize: 28, color: '#666' }}>{`Hosted by ${hostName}`}</div>
                     </div>
                 </div>

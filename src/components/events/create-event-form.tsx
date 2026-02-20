@@ -19,6 +19,7 @@ export const CreateEventForm = () => {
     const [success, setSuccess] = useState<string | undefined>("");
     const [isPending, startTransition] = useTransition();
     const [locationData, setLocationData] = useState<{ address: string; lat: number; lng: number } | null>(null);
+    const [isFullDay, setIsFullDay] = useState(false);
     const router = useRouter();
 
     const onSubmit = (formData: FormData) => {
@@ -34,7 +35,7 @@ export const CreateEventForm = () => {
         const lng = locationData?.lng;
 
         startTransition(() => {
-            createEvent({ title, description, date, location, lat, lng })
+            createEvent({ title, description, date, isFullDay, location, lat, lng })
                 .then((data) => {
                     if (data.error) {
                         setError(data.error);
@@ -82,12 +83,25 @@ export const CreateEventForm = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label htmlFor="date" className="text-sm font-medium">Date & Time</label>
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="date" className="text-sm font-medium">Date & Time</label>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="isFullDay"
+                                            name="isFullDay"
+                                            checked={isFullDay}
+                                            onChange={(e) => setIsFullDay(e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                        <label htmlFor="isFullDay" className="text-sm font-medium text-slate-700 cursor-pointer">Full Day</label>
+                                    </div>
+                                </div>
                                 <Input
                                     id="date"
                                     name="date"
                                     disabled={isPending}
-                                    type="datetime-local"
+                                    type={isFullDay ? "date" : "datetime-local"}
                                     required
                                 />
                             </div>
