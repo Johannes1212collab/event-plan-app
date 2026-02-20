@@ -97,8 +97,8 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
     }
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="h-full flex flex-col overflow-hidden" id="media-gallery">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <div className="space-y-1">
                     <CardTitle>Media Gallery</CardTitle>
                     <CardDescription>

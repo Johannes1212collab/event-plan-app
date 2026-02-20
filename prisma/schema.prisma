@@ -23,6 +23,7 @@ model User {
   participating Participant[]
   messages      Message[]
   accounts      Account[]
+  hasSeenOnboarding Boolean @default(false)
 }
 
 model Account {

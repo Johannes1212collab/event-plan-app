@@ -204,9 +204,11 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
             <div className="p-4 bg-white border-t">
                 <form onSubmit={onSubmit} className="flex gap-2 items-center">
                     <Button
+                        id="chat-paperclip"
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="rounded-full shrink-0"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
                     >

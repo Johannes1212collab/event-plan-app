@@ -45,7 +45,7 @@ export function DeleteEventButton({ eventId }: DeleteEventButtonProps) {
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
+                <Button id="delete-event-btn" variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete Event
                 </Button>

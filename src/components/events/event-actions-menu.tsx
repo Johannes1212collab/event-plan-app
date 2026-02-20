@@ -116,7 +116,7 @@ export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2 active:scale-95 transition-all data-[state=open]:bg-accent data-[state=open]:text-accent-foreground">
+                    <Button id="event-actions" variant="outline" className="gap-2 active:scale-95 transition-all data-[state=open]:bg-accent data-[state=open]:text-accent-foreground">
                         <Share2 className="h-4 w-4" />
                         Share / Options
                     </Button>

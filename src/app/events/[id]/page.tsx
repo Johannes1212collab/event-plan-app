@@ -37,27 +37,42 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 }
 
-const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
-    const { id } = await params;
+interface EventPageProps {
+    params: Promise<{
+        id: string;
+    }>;
+}
+
+const EventPage = async (props: EventPageProps) => {
+    const params = await props.params;
     const session = await auth();
 
-    if (!session?.user || !session.user.id) {
-        redirect(`/login?callbackUrl=/events/${id}`);
-    }
-
-    const event = await getEventById(id);
-    const eventMedia = await getEventMedia(id);
-
-    if (!event) {
+    if (!session?.user?.id) {
         return (
-            <div className="flex flex-col items-center justify-center h-screen gap-4">
-                <p className="text-xl font-semibold">Event not found</p>
-                <Button asChild>
-                    <Link href="/dashboard">Back to Dashboard</Link>
-                </Button>
+            <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+                <p>You must be logged in to view this event.</p>
+                <form action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/login" });
+                }}>
+                    <Button>Sign In</Button>
+                </form>
             </div>
         );
     }
+
+    const event = await getEventById(params.id);
+    const eventMedia = await getEventMedia(params.id);
+
+    if (!event) {
+        return <div>Event not found</div>;
+    }
+
+    // Fetch user to get fresh hasSeenOnboarding status
+    const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { hasSeenOnboarding: true }
+    });
 
     // Check if user is participant?
     // Access Code logic?
@@ -68,7 +83,8 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     // ... existing imports ...
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-slate-50 flex flex-col">
+            <OnboardingTour hasSeenOnboarding={user?.hasSeenOnboarding ?? false} page="event" />
             <header className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-x-2 font-bold text-lg hover:opacity-80 transition-opacity">
@@ -78,12 +94,12 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                         <DeleteEventButton eventId={event.id} />
                     )}
                 </div>
-            </header >
+            </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Event Details */}
-                    <div className="lg:col-span-1 space-y-6">
+                    <div className="lg:col-span-1 space-y-6" id="event-title-card">
                         <Card>
                             <CardHeader>
                                 <CardTitle>{event.title}</CardTitle>
@@ -150,7 +166,7 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
                 </div>
             </main>
-        </div >
+        </div>
     );
 }
 
