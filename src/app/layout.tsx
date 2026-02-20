@@ -27,11 +27,20 @@ export const metadata: Metadata = {
     siteName: "EventHub",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "EventHub",
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
     title: "EventHub",
     description: "Plan Events. Invite Friends. Share Memories.",
+    images: ["/opengraph-image"],
   },
 };
 
