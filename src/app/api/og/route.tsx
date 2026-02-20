@@ -39,23 +39,49 @@ export async function GET(request: NextRequest) {
 
         console.log(`[OG] Fetching event: ${eventId}`);
 
-        // MOCK DATA FOR INFRASTRUCTURE TEST
-        const event = {
-            title: "Test Event (DB Disabled)",
-            date: new Date(),
-            host: { name: "Test Host" }
-        };
+        let event;
+        try {
+            // DYNAMIC IMPORT to prevent top-level module crash
+            const { default: db } = await import('@/lib/db');
 
-        // let event;
-        // try {
-        //     event = await db.event.findUnique({
-        //         where: { id: eventId },
-        //         include: { host: true },
-        //     });
-        // } catch (innerDbError: any) {
-        //     console.error('[OG] Inner DB Error:', innerDbError);
-        //     throw new Error(`DB Query Failed: ${innerDbError.message}`);
-        // }
+            if (!db) throw new Error("Imported DB client is undefined");
+
+            event = await db.event.findUnique({
+                where: { id: eventId },
+                include: { host: true },
+            });
+        } catch (innerDbError: any) {
+            console.error('[OG] Inner DB Error:', innerDbError);
+            return new ImageResponse(
+                (
+                    <div
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#fee2e2',
+                            color: '#991b1b',
+                            fontSize: 24,
+                            fontWeight: 600,
+                            padding: 40,
+                            textAlign: 'center',
+                        }}
+                    >
+                        <div>EventHub: Database Error (Lazy Load)</div>
+                        <div style={{ fontSize: 16, marginTop: 20, maxWidth: '80%', wordBreak: 'break-all' }}>
+                            {innerDbError.name}: {innerDbError.message}
+                        </div>
+                    </div>
+                ),
+                {
+                    width: 1200,
+                    height: 630,
+                }
+            );
+        }
 
         if (!event) {
             console.error(`[OG] Event not found: ${eventId}`);
