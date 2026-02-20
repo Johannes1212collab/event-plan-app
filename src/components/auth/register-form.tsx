@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useTransition } from "react";
@@ -9,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import Link from "next/link";
-
 import { useSearchParams } from "next/navigation";
+import { Social } from "@/components/auth/social";
 
 export const RegisterForm = () => {
     const searchParams = useSearchParams();
@@ -85,7 +84,8 @@ export const RegisterForm = () => {
                     </Button>
                 </form>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-4">
+                <Social />
                 <Button variant="link" className="font-normal w-full" size="sm" asChild>
                     <Link href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login"}>
                         Already have an account?

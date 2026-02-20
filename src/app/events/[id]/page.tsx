@@ -1,7 +1,9 @@
 
+import { Metadata } from "next";
 import { auth, signOut } from "@/auth";
 import { getEventById, getEventMedia } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
+import { AddToCalendar } from "@/components/events/add-to-calendar";
 import { QRInvite } from "@/components/events/qr-invite";
 import { EventMap } from "@/components/events/event-map";
 import { MediaGallery } from "@/components/events/media-gallery";
@@ -12,6 +14,28 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DeleteEventButton } from "@/components/events/delete-event-button";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const event = await getEventById(id);
+
+    if (!event) {
+        return {
+            title: "Event Not Found",
+            description: "The event you are looking for does not exist.",
+        }
+    }
+
+    return {
+        title: `${event.title} - EventHub`,
+        description: `Join ${event.host.name} for ${event.title} on ${new Date(event.date).toLocaleDateString()}. ${event.description || ""}`,
+        openGraph: {
+            title: event.title,
+            description: `Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 100) + "..." : ""}`,
+            // url is automatically handled relative to metadataBase in layout.tsx
+        }
+    }
+}
 
 const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
@@ -79,9 +103,12 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                                     <p>{event.description || "No description."}</p>
                                 </div>
                                 <div className="pt-4 border-t">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium text-slate-700">Share Event</span>
-                                        <QRInvite />
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-sm font-medium text-slate-700">Actions</span>
+                                        <div className="flex gap-2">
+                                            <AddToCalendar event={event} />
+                                            <QRInvite />
+                                        </div>
                                     </div>
                                 </div>
                                 {event.lat && event.lng && (

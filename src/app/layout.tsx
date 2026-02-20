@@ -14,8 +14,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EventHub",
+  metadataBase: new URL("https://eventhub.community"),
+  title: {
+    default: "EventHub",
+    template: "%s | EventHub",
+  },
   description: "Plan Events. Invite Friends. Share Memories.",
+  openGraph: {
+    title: "EventHub",
+    description: "The easiest way to organize gatherings and keep all your photos and chats in one place.",
+    url: "https://eventhub.community",
+    siteName: "EventHub",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EventHub",
+    description: "Plan Events. Invite Friends. Share Memories.",
+  },
 };
 
 export default function RootLayout({
