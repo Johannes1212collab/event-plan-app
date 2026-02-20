@@ -79,6 +79,13 @@ interface EventPageProps {
 
 const EventPage = async (props: EventPageProps) => {
     const params = await props.params;
+
+    // CRITICAL: Next.js streaming bug fix.
+    // If we don't await the metadata cache here before awaiting auth(), 
+    // the auth() check finishes instantly and streams the `<head>` before generateMetadata finishes.
+    // This pushes all OpenGraph image tags to the bottom of the HTML payload, which breaks Messenger previews.
+    await getEventMetadata(params.id);
+
     const session = await auth();
 
     if (!session?.user?.id) {
