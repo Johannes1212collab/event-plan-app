@@ -44,18 +44,20 @@ export async function GET(request: NextRequest) {
                     ssl: { rejectUnauthorized: false }
                 });
 
-                // Hardcoded ID for testing or use a param if needed,
-                // but let's just test connectivity + query validity.
+                // Hardcoded query WITH PARAM
                 const query = `
                     SELECT e."title", e."date", u."name" as "hostName"
                     FROM "Event" e
                     LEFT JOIN "User" u ON e."hostId" = u."id"
+                    WHERE e."id" = $1
                     LIMIT 1
                 `;
-                const result = await pool.query(query);
+                // Use a default ID or pass one
+                const testId = 'cmlucwb66000004jx7ws702ey';
+                const result = await pool.query(query, [testId]);
                 await pool.end();
 
-                return new Response(JSON.stringify({ status: 'Data OK', rows: result.rows }, null, 2), {
+                return new Response(JSON.stringify({ status: 'Data OK (With Param)', rows: result.rows }, null, 2), {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -123,6 +125,7 @@ export async function GET(request: NextRequest) {
                     date: row.date,
                     host: { name: row.hostName }
                 };
+                console.log(`[OG] Event data found for ${eventId}:`, event);
             }
 
         } catch (innerDbError: any) {
@@ -297,28 +300,14 @@ export async function GET(request: NextRequest) {
         );
     } catch (e: any) {
         console.log(`${e.message}`);
-        return new ImageResponse(
-            (
-                <div
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#fff',
-                        fontSize: 32,
-                        fontWeight: 600,
-                    }}
-                >
-                    EventHub: Failed to generate image (Outer Catch)
-                    <div style={{ fontSize: 16, marginTop: 20 }}>{e.message}</div>
-                </div>
-            ),
-            {
-                width: 1200,
-                height: 630,
-            }
-        );
+        // GLOBAL ERROR CATCH: Return JSON so we can diagnose rendering/font failures
+        return new Response(JSON.stringify({
+            error: "Global Render Error",
+            message: e.message,
+            stack: e.stack
+        }, null, 2), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 }
