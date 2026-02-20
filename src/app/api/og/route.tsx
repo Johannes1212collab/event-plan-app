@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
 
         console.log(`[OG] Rendering - EH Logo Design - Host: ${hostName}`);
 
-        return new ImageResponse(
+        const imageRes = new ImageResponse(
             (
                 <div style={{
                     display: 'flex',
@@ -235,11 +235,21 @@ export async function GET(request: NextRequest) {
             {
                 width: 1200,
                 height: 630,
-                headers: {
-                    'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
-                }
             }
         );
+
+        // BUFFER THE STREAM TO PREVENT CHUNKED ENCODING AND EXPLICITLY SET CONTENT-LENGTH
+        // Messenger strictly rejects chunked images in meta tags.
+        const imageBuffer = await imageRes.arrayBuffer();
+
+        return new Response(imageBuffer, {
+            status: 200,
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': String(imageBuffer.byteLength),
+                'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+            }
+        });
 
     } catch (e: any) {
         console.log(`${e.message}`);
