@@ -156,14 +156,23 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // MINIMAL TEST 10: Single String Child (Template Literal)
-        const hostName = "HARDCODED HOST TEST";
+        // Formatting date
+        const eventDate = new Date(event.date);
+        const dateStr = eventDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
+        const timeStr = eventDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+        });
+
+        // RESTORING DATA with Single String Child Fix
+        const hostName = event.host?.name || "Unknown Host";
         const titleSafe = event.title || 'Untitled Event';
 
-        // Commenting out potentially toxic access just in case
-        // console.log(`[OG] Real Host Variable: ${event.host?.name}`); 
-
-        console.log(`[OG] Rendering Loop - Test 10 (Single String Child)`);
+        console.log(`[OG] Rendering - Logic OK - Host: ${hostName}`);
 
         return new ImageResponse(
             (
@@ -180,8 +189,9 @@ export async function GET(request: NextRequest) {
                 }}>
                     <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
 
-                    {/* TEST 10: Template Literal. Single Child. */}
-                    <div style={{ fontSize: 30, marginTop: 20 }}>{`Host: ${hostName}`}</div>
+                    {/* RESTORED DATA with Template Literals to avoid Mixed Text Node Crash */}
+                    <div style={{ fontSize: 30, marginTop: 20 }}>{`${dateStr}`}</div>
+                    <div style={{ fontSize: 30 }}>{`Host: ${hostName}`}</div>
                 </div>
             ),
             {
