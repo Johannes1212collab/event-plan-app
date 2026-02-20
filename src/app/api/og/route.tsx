@@ -187,13 +187,12 @@ export async function GET(request: NextRequest) {
         });
         */
 
-        // MINIMAL TEST 5: Hardcoded String (Testing JSX Structure)
-        // const hostName = event.host?.name || 'Unknown Host';
-        const hostName = "HARDCODED HOST TEST"; // If this works, the variable 'event.host.name' is toxic.
-
-        console.log(`[OG] Real Host Variable: ${event.host?.name}`); // Verify access doesn't crash JS logic
+        // MINIMAL TEST 6: 3rd Child Structure Test (No color/margin)
+        const hostName = "HARDCODED HOST TEST";
 
         const titleSafe = event.title || 'Untitled Event';
+
+        console.log(`[OG] Real Host Variable: ${event.host?.name}`); // Verify access doesn't crash JS logic
 
         return new ImageResponse(
             (
@@ -210,9 +209,7 @@ export async function GET(request: NextRequest) {
                 }}>
                     <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
                     <div style={{ fontSize: 30, marginTop: 20 }}>{dateStr}</div>
-                    <div style={{ fontSize: 30, marginTop: 20, color: 'blue' }}>
-                        Host: {hostName}
-                    </div>
+                    <div style={{ fontSize: 30 }}>Host: {hostName}</div> {/* Clean 3rd Child */}
                 </div>
             ),
             {
@@ -220,6 +217,7 @@ export async function GET(request: NextRequest) {
                 height: 630,
             }
         );
+
     } catch (e: any) {
         console.log(`${e.message}`);
         // GLOBAL ERROR CATCH: Return JSON so we can diagnose rendering/font failures
