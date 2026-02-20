@@ -168,30 +168,53 @@ export async function GET(request: NextRequest) {
             minute: '2-digit',
         });
 
-        // RESTORING DATA with Single String Child Fix
+        // RESTORED DATA with Single String Child Fix
         const hostName = event.host?.name || "Unknown Host";
         const titleSafe = event.title || 'Untitled Event';
 
-        console.log(`[OG] Rendering - Logic OK - Host: ${hostName}`);
+        console.log(`[OG] Rendering - Safe Mode - Host: ${hostName}`);
 
         return new ImageResponse(
             (
                 <div style={{
                     display: 'flex',
-                    background: 'white',
+                    flexDirection: 'column',
                     width: '100%',
                     height: '100%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    fontSize: 50,
-                    borderRadius: 20,
+                    background: 'linear-gradient(to bottom right, #3b82f6, #8b5cf6)',
+                    color: 'white',
+                    padding: '60px',
+                    justifyContent: 'space-between',
                 }}>
-                    <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px'
+                    }}>
+                        <div style={{ fontSize: 32, fontWeight: 'bold', opacity: 0.8 }}>EventHub</div>
+                        <div style={{
+                            fontSize: 72,
+                            fontWeight: 'bold',
+                            lineHeight: 1.1,
+                            textShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                        }}>
+                            {titleSafe}
+                        </div>
+                    </div>
 
-                    {/* RESTORED DATA with Template Literals to avoid Mixed Text Node Crash */}
-                    <div style={{ fontSize: 30, marginTop: 20 }}>{`${dateStr}`}</div>
-                    <div style={{ fontSize: 30 }}>{`Host: ${hostName}`}</div>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        background: 'rgba(255,255,255,0.1)',
+                        padding: '30px',
+                        borderRadius: '20px',
+                        backdropFilter: 'blur(10px)'
+                    }}>
+                        {/* SAFE MODE: All text nodes wrapped in template literals */}
+                        <div style={{ fontSize: 36, fontWeight: 'bold' }}>{`${dateStr} at ${timeStr}`}</div>
+                        <div style={{ fontSize: 28, opacity: 0.9 }}>{`Hosted by ${hostName}`}</div>
+                    </div>
                 </div>
             ),
             {
