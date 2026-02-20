@@ -30,12 +30,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         }
     }
 
+    const eventDate = new Date(event.date);
+    const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const description = `${dateStr} at ${timeStr} • Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 50) + "..." : ""}`;
+
     return {
         title: `${event.title} - EventHub`,
-        description: `Join ${event.host.name} for ${event.title} on ${new Date(event.date).toLocaleDateString()}. ${event.description || ""}`,
+        description: description,
         openGraph: {
             title: event.title,
-            description: `Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 100) + "..." : ""}`,
+            description: description,
             url: `https://eventhub.community/events/${event.id}`,
             siteName: "EventHub",
             images: [
@@ -53,7 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         twitter: {
             card: "summary_large_image",
             title: event.title,
-            description: `Hosted by ${event.host.name}`,
+            description: description,
             images: [`https://eventhub.community/api/og?eventId=${event.id}`],
         },
     }
