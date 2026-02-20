@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
         const hostName = event.host?.name || "Unknown Host";
         const titleSafe = event.title || 'Untitled Event';
 
-        console.log(`[OG] Rendering - Safe Mode - Host: ${hostName}`);
+        console.log(`[OG] Rendering - White Theme - Host: ${hostName}`);
 
         return new ImageResponse(
             (
@@ -181,22 +181,29 @@ export async function GET(request: NextRequest) {
                     flexDirection: 'column',
                     width: '100%',
                     height: '100%',
-                    background: 'linear-gradient(to bottom right, #3b82f6, #8b5cf6)',
-                    color: 'white',
+                    background: 'white',
+                    color: 'black',
                     padding: '60px',
                     justifyContent: 'space-between',
                 }}>
+                    {/* Header with Arrow Logo */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        {/* Small Arrow Logo (Vercel Triangle - Black) */}
+                        <svg width="40" height="40" viewBox="0 0 1155 1000" style={{ marginRight: 20 }}>
+                            <path d="m577.3 0 577.4 1000H0z" fill="black" />
+                        </svg>
+                        <div style={{ fontSize: 32, fontWeight: 'bold' }}>EventHub</div>
+                    </div>
+
                     <div style={{
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '20px'
                     }}>
-                        <div style={{ fontSize: 32, fontWeight: 'bold', opacity: 0.8 }}>EventHub</div>
                         <div style={{
                             fontSize: 72,
                             fontWeight: 'bold',
                             lineHeight: 1.1,
-                            textShadow: '0 4px 12px rgba(0,0,0,0.2)'
                         }}>
                             {titleSafe}
                         </div>
@@ -206,14 +213,10 @@ export async function GET(request: NextRequest) {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '12px',
-                        background: 'rgba(255,255,255,0.1)',
-                        padding: '30px',
-                        borderRadius: '20px',
-                        backdropFilter: 'blur(10px)'
                     }}>
                         {/* SAFE MODE: All text nodes wrapped in template literals */}
-                        <div style={{ fontSize: 36, fontWeight: 'bold' }}>{`${dateStr} at ${timeStr}`}</div>
-                        <div style={{ fontSize: 28, opacity: 0.9 }}>{`Hosted by ${hostName}`}</div>
+                        <div style={{ fontSize: 36, fontWeight: 'bold', color: '#333' }}>{`${dateStr} at ${timeStr}`}</div>
+                        <div style={{ fontSize: 28, color: '#666' }}>{`Hosted by ${hostName}`}</div>
                     </div>
                 </div>
             ),
