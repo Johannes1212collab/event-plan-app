@@ -12,10 +12,43 @@ export async function GET(request: NextRequest) {
 
         // TRACE MODE: Return early if specific trace requested
         if (eventId === 'trace_start') {
-            return new ImageResponse(
-                (<div style={{ fontSize: 30, background: 'white' }}>Trace: Start OK (No DB)</div>),
-                { width: 600, height: 300 }
-            );
+            const envCheck = {
+                status: 'Trace OK',
+                hasDbUrl: !!process.env.DATABASE_URL,
+                hasPrismaUrl: !!process.env.POSTGRES_PRISMA_URL,
+                dbUrlLength: process.env.DATABASE_URL?.length || 0,
+                nodeEnv: process.env.NODE_ENV,
+                // @ts-ignore
+                runtime: process.release?.name || 'unknown'
+            };
+            return new Response(JSON.stringify(envCheck, null, 2), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (eventId === 'trace_db_raw') {
+            try {
+                const { Pool } = await import('pg');
+                const connectionString = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL;
+                if (!connectionString) throw new Error("No Connection String found");
+
+                const pool = new Pool({ connectionString, connectionTimeoutMillis: 5000 });
+                const client = await pool.connect();
+                await client.query('SELECT 1');
+                client.release();
+                await pool.end();
+
+                return new Response(JSON.stringify({ status: 'Raw PG Connection Success' }, null, 2), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                return new Response(JSON.stringify({ status: 'Raw PG Failed', error: e.message, stack: e.stack }, null, 2), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
         }
 
         if (eventId === 'debug') {
