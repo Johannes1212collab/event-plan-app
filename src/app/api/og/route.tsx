@@ -187,7 +187,10 @@ export async function GET(request: NextRequest) {
         });
         */
 
-        // MINIMAL TEST 3: Removing Font Weight (Suspected Crash Cause)
+        // MINIMAL TEST 4: Flattened data access
+        const hostName = event.host?.name || 'Unknown Host';
+        const titleSafe = event.title || 'Untitled Event';
+
         return new ImageResponse(
             (
                 <div style={{
@@ -201,10 +204,10 @@ export async function GET(request: NextRequest) {
                     fontSize: 50,
                     borderRadius: 20,
                 }}>
-                    <div style={{ fontWeight: 'normal' }}>{event.title}</div> {/* Removed 900 */}
+                    <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
                     <div style={{ fontSize: 30, marginTop: 20 }}>{dateStr}</div>
                     <div style={{ fontSize: 30, marginTop: 20, color: 'blue' }}>
-                        Host: {event.host?.name || 'Unknown'}
+                        Host: {hostName}
                     </div>
                 </div>
             ),
