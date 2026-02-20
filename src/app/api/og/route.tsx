@@ -187,12 +187,12 @@ export async function GET(request: NextRequest) {
         });
         */
 
-        // RESTORED PREMIUM DESIGN
+        // SAFE PREMIUM DESIGN (Bisecting: Solid BG, No Absolute, No Truncation)
         return new ImageResponse(
             (
                 <div
                     style={{
-                        background: 'linear-gradient(to bottom right, #f8fafc, #e2e8f0)',
+                        background: '#f8fafc', // SOLID COLOR ONLY
                         width: '100%',
                         height: '100%',
                         display: 'flex',
@@ -200,17 +200,15 @@ export async function GET(request: NextRequest) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontFamily: 'sans-serif',
-                        position: 'relative',
+                        // position: 'relative', // Removed relative/absolute context
                     }}
                 >
-                    {/* Logo Top Left */}
+                    {/* Logo - Moved to standard flow top */}
                     <div
                         style={{
-                            position: 'absolute',
-                            top: 40,
-                            left: 40,
                             display: 'flex',
                             alignItems: 'center',
+                            marginBottom: 40, // Spacing instead of absolute
                         }}
                     >
                         <div
@@ -241,7 +239,7 @@ export async function GET(request: NextRequest) {
                             alignItems: 'center',
                             textAlign: 'center',
                             padding: '0 80px',
-                            maxWidth: '900px',
+                            // maxWidth: '900px', // Removed max-width
                         }}
                     >
                         {/* Title */}
@@ -253,10 +251,7 @@ export async function GET(request: NextRequest) {
                                 marginBottom: 24,
                                 lineHeight: 1.1,
                                 letterSpacing: '-0.02em',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                maxWidth: '1000px'
+                                // REMOVED TRUNCATION LOGIC
                             }}
                         >
                             {event.title}
@@ -285,7 +280,7 @@ export async function GET(request: NextRequest) {
                                 background: 'white',
                                 padding: '12px 24px',
                                 borderRadius: 9999,
-                                border: '1px solid #e2e8f0', // Replaced boxShadow with border for safety
+                                border: '1px solid #e2e8f0',
                             }}
                         >
                             <div
