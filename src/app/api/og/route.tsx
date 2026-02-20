@@ -52,33 +52,17 @@ export async function GET(request: NextRequest) {
             });
         } catch (innerDbError: any) {
             console.error('[OG] Inner DB Error:', innerDbError);
-            return new ImageResponse(
-                (
-                    <div
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#fee2e2',
-                            color: '#991b1b',
-                            fontSize: 24,
-                            fontWeight: 600,
-                            padding: 40,
-                            textAlign: 'center',
-                        }}
-                    >
-                        <div>EventHub: Database Error (Lazy Load)</div>
-                        <div style={{ fontSize: 16, marginTop: 20, maxWidth: '80%', wordBreak: 'break-all' }}>
-                            {innerDbError.name}: {innerDbError.message}
-                        </div>
-                    </div>
-                ),
+            // Return RAW TEXT/JSON instead of ImageResponse to prevent rendering crashes
+            return new Response(
+                JSON.stringify({
+                    error: "Database Error",
+                    message: innerDbError.message,
+                    name: innerDbError.name,
+                    stack: innerDbError.stack
+                }, null, 2),
                 {
-                    width: 1200,
-                    height: 630,
+                    status: 200, // Return 200 to ensure browser displays it
+                    headers: { 'Content-Type': 'application/json' }
                 }
             );
         }
