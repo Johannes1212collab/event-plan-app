@@ -6,24 +6,32 @@ import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { unstable_cache } from "next/cache";
+
 export const getEventMetadata = async (id: string) => {
-    const event = await db.event.findUnique({
-        where: { id },
-        select: {
-            id: true,
-            title: true,
-            description: true,
-            date: true,
-            isFullDay: true,
-            location: true,
-            host: {
+    return unstable_cache(
+        async () => {
+            const event = await db.event.findUnique({
+                where: { id },
                 select: {
-                    name: true,
+                    id: true,
+                    title: true,
+                    description: true,
+                    date: true,
+                    isFullDay: true,
+                    location: true,
+                    host: {
+                        select: {
+                            name: true,
+                        }
+                    }
                 }
-            }
-        }
-    });
-    return event;
+            });
+            return event;
+        },
+        [`event-metadata-${id}`],
+        { revalidate: 3600, tags: [`event-${id}`] }
+    )();
 };
 
 
