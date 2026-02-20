@@ -49,3 +49,30 @@ export const sendMessage = async (values: any) => {
         return { error: "Something went wrong!" };
     }
 };
+
+export const getMessages = async (eventId: string) => {
+    try {
+        const messages = await db.message.findMany({
+            where: {
+                eventId,
+            },
+            include: {
+                sender: {
+                    select: {
+                        name: true,
+                        image: true,
+                        id: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "asc", // Already returning ascending order typically? Let's make it explicitly ascending
+            },
+        });
+
+        return { messages };
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        return { error: "Failed to fetch messages" };
+    }
+};

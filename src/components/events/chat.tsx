@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { sendMessage } from "@/actions/message";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { sendMessage, getMessages } from "@/actions/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Image as ImageIcon, Loader2, Paperclip } from "lucide-react";
@@ -32,20 +32,58 @@ interface ChatProps {
 export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => {
     const [content, setContent] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+    const [realMessages, setRealMessages] = useState<Message[]>(initialMessages);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Simple optimistic UI
     const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-        initialMessages,
-        (state, newMessage: Message) => [...state, newMessage]
+        realMessages,
+        (state, newMessage: Message) => {
+            // Check if optimistic message already exists to avoid duplication locally
+            const exists = state.some(m => m.id === newMessage.id);
+            if (exists) return state;
+            return [...state, newMessage];
+        }
     );
 
     useEffect(() => {
         if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            // Check if we are near the bottom
+            const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+
+            // Only force scroll if user is near bottom or we literally just sent a message quickly
+            // But realistically just doing it indiscriminately is what initial version did. 
+            // We'll scroll to bottom if near bottom.
+            if (isNearBottom || optimisticMessages.length !== realMessages.length) {
+                scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }
         }
     }, [optimisticMessages]);
+
+    // Polling logic
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await getMessages(eventId);
+                if (res.messages) {
+                    setRealMessages(res.messages as Message[]);
+                }
+            } catch (err) {
+                console.error("Polling error", err);
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [eventId]);
+
+    const handleInputFocus = () => {
+        setTimeout(() => {
+            inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+    };
 
     const handleSendMessage = async (mediaUrl?: string, mediaType?: string) => {
         if (!content && !mediaUrl) return;
@@ -120,12 +158,30 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
             const { upload } = await import('@vercel/blob/client');
             const { toast } = await import('sonner'); // Dynamic import for now to match scope
 
+            let imageCompression;
+            try {
+                imageCompression = (await import('browser-image-compression')).default;
+            } catch (e) {
+                console.warn("browser-image-compression not available", e);
+            }
+
             for (const file of Array.from(files)) {
-                const toastId = toast.loading(`Uploading ${file.name}...`);
+                let fileToUpload: File | Blob = file;
+                const toastId = toast.loading(`Preparing ${file.name}...`);
 
                 try {
+                    if (file.type.startsWith('image/') && imageCompression) {
+                        toast.loading(`Compressing ${file.name}...`, { id: toastId });
+                        fileToUpload = await imageCompression(file, {
+                            maxSizeMB: 1,
+                            maxWidthOrHeight: 1920,
+                            useWebWorker: true,
+                        });
+                    }
+
+                    toast.loading(`Uploading to server...`, { id: toastId });
                     const filename = `${file.name.split('.').slice(0, -1).join('.')}-${Math.random().toString(36).substring(2, 9)}.${file.name.split('.').pop()}`;
-                    const newBlob = await upload(filename, file, {
+                    const newBlob = await upload(filename, fileToUpload as File, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
                     });
@@ -170,7 +226,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     };
 
     return (
-        <div className="flex flex-col h-[calc(100dvh-10rem)] md:h-[600px] border rounded-lg bg-white shadow-sm overflow-hidden">
+        <div className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-white shadow-sm overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50" ref={scrollRef}>
                 {optimisticMessages.length === 0 && (
                     <div className="text-center text-slate-400 mt-10">
@@ -223,6 +279,8 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                         onChange={handleUpload}
                     />
                     <Input
+                        ref={inputRef}
+                        onFocus={handleInputFocus}
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         placeholder="Type a message..."
