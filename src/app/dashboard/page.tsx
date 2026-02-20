@@ -36,14 +36,7 @@ const DashboardPage = async () => {
                     </div>
 
                     <div className="flex items-center gap-x-4">
-                        <form action={async () => {
-                            "use server";
-                            await import("@/actions/reset-onboarding").then(m => m.resetOnboarding());
-                        }}>
-                            <Button variant="secondary" size="sm">
-                                Reset Tour
-                            </Button>
-                        </form>
+
                         <span className="text-sm font-medium text-slate-700">
                             {session.user.name}
                         </span>
