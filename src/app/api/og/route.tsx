@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
         const hostName = event.host?.name || "Unknown Host";
         const titleSafe = event.title || 'Untitled Event';
 
-        console.log(`[OG] Rendering - White Theme - Host: ${hostName}`);
+        console.log(`[OG] Rendering - EH Logo Design - Host: ${hostName}`);
 
         return new ImageResponse(
             (
@@ -186,12 +186,24 @@ export async function GET(request: NextRequest) {
                     padding: '60px',
                     justifyContent: 'space-between',
                 }}>
-                    {/* Header with Arrow Logo */}
+                    {/* Header with EH Logo (CSS) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        {/* Small Arrow Logo (Vercel Triangle - Black) */}
-                        <svg width="40" height="40" viewBox="0 0 1155 1000" style={{ marginRight: 20 }}>
-                            <path d="m577.3 0 577.4 1000H0z" fill="black" />
-                        </svg>
+                        {/* EH Logo: Black Rounded Square with White Text */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'black',
+                            color: 'white',
+                            borderRadius: '12px',
+                            width: '60px',
+                            height: '60px',
+                            fontSize: '32px',
+                            fontWeight: 'bold',
+                            marginRight: '20px'
+                        }}>
+                            EH
+                        </div>
                         <div style={{ fontSize: 32, fontWeight: 'bold' }}>EventHub</div>
                     </div>
 
