@@ -27,30 +27,6 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        if (eventId === 'trace_db_raw') {
-            try {
-                const { Pool } = await import('pg');
-                const connectionString = process.env.POSTGRES_PRISMA_URL || process.env.DATABASE_URL;
-                if (!connectionString) throw new Error("No Connection String found");
-
-                const pool = new Pool({ connectionString, connectionTimeoutMillis: 5000 });
-                const client = await pool.connect();
-                await client.query('SELECT 1');
-                client.release();
-                await pool.end();
-
-                return new Response(JSON.stringify({ status: 'Raw PG Connection Success' }, null, 2), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                });
-            } catch (e: any) {
-                return new Response(JSON.stringify({ status: 'Raw PG Failed', error: e.message, stack: e.stack }, null, 2), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                });
-            }
-        }
-
         if (eventId === 'debug') {
             return new ImageResponse(
                 (<div style={{ fontSize: 30, background: 'white', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>EventHub: Debug Success</div>),
@@ -74,12 +50,11 @@ export async function GET(request: NextRequest) {
 
         let event;
         try {
-            // DYNAMIC IMPORT to prevent top-level module crash
-            const { default: db } = await import('@/lib/db');
+            // VANILLA PRISMA: Bypass lib/db and pg-adapter
+            const { PrismaClient } = await import('@prisma/client');
+            const prisma = new PrismaClient();
 
-            if (!db) throw new Error("Imported DB client is undefined");
-
-            event = await db.event.findUnique({
+            event = await prisma.event.findUnique({
                 where: { id: eventId },
                 include: { host: true },
             });
