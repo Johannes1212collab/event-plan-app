@@ -7,6 +7,9 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,33 +18,39 @@ import {
     Mail,
     QrCode,
     Link as LinkIcon,
-    Share2
+    Share2,
+    CalendarPlus,
+    CalendarCheck
 } from "lucide-react";
 import { useState } from "react";
-import { InviteGuestDialog } from "./invite-guest-dialog"; // Modify InviteGuestDialog to be trigger-able or wrap it?
+import { InviteGuestDialog } from "./invite-guest-dialog";
 // Actually, Dialogs usually need to wrap the trigger or be controlled. 
 // A DropdownMenuItem cannot easily contain a DialogTrigger without closing the menu.
 // Pattern: Control the dialog state manually or use a specific structure.
 // Better UX for Dropdown + Dialog:
 // The DropdownMenuItem onClick sets a state to open the Dialog, which is rendered OUTSIDE the Dropdown.
 
-import { AddToCalendar } from "./add-to-calendar"; // We might need to refactor this too if it's a dropdown itself.
+// We might need to refactor this too if it's a dropdown itself.
 // AddToCalendar IS a dropdown... Nested dropdowns can be tricky but Shadcn/Radix supports them (Submenu).
 
 import { QRInvite } from "./qr-invite"; // This is a Dialog.
 import { toast } from "sonner";
+import * as ics from "ics";
 
 interface EventActionsMenuProps {
-    event: any; // Type strictly if possible, or use the type from Prisma
+    event: {
+        id: string;
+        title: string;
+        description?: string | null;
+        date: Date;
+        location?: string | null;
+        durationHours?: number;
+    };
 }
 
 export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
     const [showInviteDialog, setShowInviteDialog] = useState(false);
     const [showQRDialog, setShowQRDialog] = useState(false);
-
-    // We need to reconstruct the QRInvite and InviteGuestDialog to handle "controlled" open state 
-    // OR just render them here and trigger them.
-    // Actually, Shadcn Dialog has `open` and `onOpenChange` props.
 
     const handleCopyLink = () => {
         const url = `${window.location.origin}/events/${event.id}`;
@@ -49,11 +58,65 @@ export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
         toast.success("Event link copied to clipboard!");
     };
 
+    const googleCalendarUrl = () => {
+        const startTime = new Date(event.date).toISOString().replace(/-|:|\.\d\d\d/g, "");
+        const endTime = new Date(new Date(event.date).getTime() + (event.durationHours || 2) * 60 * 60 * 1000)
+            .toISOString()
+            .replace(/-|:|\.\d\d\d/g, "");
+
+        const url = new URL("https://calendar.google.com/calendar/render");
+        url.searchParams.append("action", "TEMPLATE");
+        url.searchParams.append("text", event.title);
+        url.searchParams.append("dates", `${startTime}/${endTime}`);
+        if (event.description) url.searchParams.append("details", event.description);
+        if (event.location) url.searchParams.append("location", event.location);
+
+        return url.toString();
+    };
+
+    const handleAppleCalendar = async () => {
+        const startDate = new Date(event.date);
+        const icsEvent: ics.EventAttributes = {
+            start: [
+                startDate.getFullYear(),
+                startDate.getMonth() + 1,
+                startDate.getDate(),
+                startDate.getHours(),
+                startDate.getMinutes(),
+            ],
+            duration: { hours: event.durationHours || 2, minutes: 0 },
+            title: event.title,
+            description: event.description || "",
+            location: event.location || "",
+            status: "CONFIRMED",
+            busyStatus: "BUSY",
+        };
+
+        const filename = "event.ics";
+        const file = await new Promise<File>((resolve, reject) => {
+            ics.createEvent(icsEvent, (error, value) => {
+                if (error) {
+                    reject(error);
+                }
+                resolve(new File([value], filename, { type: "text/calendar" }));
+            });
+        });
+
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2 active:scale-95 transition-all">
                         <Share2 className="h-4 w-4" />
                         Share / Options
                     </Button>
@@ -61,40 +124,6 @@ export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
                 <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>Event Options</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-
-                    {/* Add to Calendar - This usually opens its own dropdown. 
-              For simplicity in this menu, maybe just link to Google Calendar directly? 
-              OR use a Submenu. Let's try Subcontent if AddToCalendar allows, 
-              but AddToCalendar component encapsulates its own button. 
-              
-              Refactoring AddToCalendar to be a SubMenu would be best, 
-              but for now, let's keep it simple: 
-              We can just render the "AddToCalendar" logic here.
-          */}
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        {/* We need to refactor AddToCalendar to act as a proper sub-menu or just extract the logic. 
-                  Let's assume for now user is okay with a cleaner top level, 
-                  maybe just "Google Calendar" and "iCal" as items here? 
-              */}
-                        <div className="w-full" onClick={(e) => e.stopPropagation()}>
-                            {/* HACK: Existing component has its own trigger. 
-                   We should probably NOT nest the existing component if it has a button.
-                   Let's use the AddToCalendar logic directly or refactor it.
-                   
-                   Let's Refactor AddToCalendar in a subsequent step? 
-                   No, let's try to make it work smoothly.
-                   
-                   Actually, "Add to Calendar" is complex. 
-                   Let's make a "Copy Link" item first.
-               */}
-                        </div>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        <span>Add to Calendar...</span>
-                        {/* This is getting complicated with nested existing components. 
-                  Easiest path: Copy Link, Email, QR are updated. 
-                  Calendar: Just extract the Google URL generation here?
-              */}
-                    </DropdownMenuItem>
 
                     <DropdownMenuItem onClick={() => setShowInviteDialog(true)}>
                         <Mail className="mr-2 h-4 w-4" />
@@ -106,27 +135,44 @@ export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
                         <span>Show QR Code</span>
                     </DropdownMenuItem>
 
-                    <DropdownMenuSeparator />
-
                     <DropdownMenuItem onClick={handleCopyLink}>
                         <LinkIcon className="mr-2 h-4 w-4" />
                         <span>Copy Link</span>
                     </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <CalendarPlus className="mr-2 h-4 w-4" />
+                            <span>Add to Calendar</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem asChild>
+                                <a href={googleCalendarUrl()} target="_blank" rel="noopener noreferrer" className="cursor-pointer flex items-center w-full">
+                                    <Calendar className="mr-2 h-4 w-4" />
+                                    <span>Google Calendar</span>
+                                </a>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleAppleCalendar} className="cursor-pointer">
+                                <CalendarCheck className="mr-2 h-4 w-4" />
+                                <span>Apple / Outlook (.ics)</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Render the Dialogs controlled by state */}
             <InviteGuestDialog
                 eventId={event.id}
                 open={showInviteDialog}
                 onOpenChange={setShowInviteDialog}
             />
 
-            {/* We need to update existing components to accept 'open' props if they don't */}
             <QRInvite
                 open={showQRDialog}
                 onOpenChange={setShowQRDialog}
-            // We might need to pass event URL or ID if it's not hardcoded context
             />
         </>
     );

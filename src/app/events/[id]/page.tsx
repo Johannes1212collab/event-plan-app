@@ -3,7 +3,6 @@ import { Metadata } from "next";
 import { auth, signOut } from "@/auth";
 import { getEventById, getEventMedia } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
-import { AddToCalendar } from "@/components/events/add-to-calendar";
 import { EventActionsMenu } from "@/components/events/event-actions-menu";
 import { QRInvite } from "@/components/events/qr-invite";
 import { EventMap } from "@/components/events/event-map";
@@ -107,7 +106,6 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="text-sm font-medium text-slate-700">Actions</span>
                                         <div className="flex gap-2">
-                                            <AddToCalendar event={event} />
                                             <EventActionsMenu event={event} />
                                         </div>
                                     </div>
