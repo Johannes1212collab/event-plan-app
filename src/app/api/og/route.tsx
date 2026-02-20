@@ -208,8 +208,12 @@ export async function GET(request: NextRequest) {
                     borderRadius: 20,
                 }}>
                     <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
-                    <div style={{ fontSize: 30, marginTop: 20 }}>{dateStr}</div>
-                    <div style={{ fontSize: 30 }}>Host: {hostName}</div> {/* Clean 3rd Child */}
+
+                    {/* TEST 7: Nested Grouping to avoid >2 direct children */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ fontSize: 30, marginTop: 20 }}>{dateStr}</div>
+                        <div style={{ fontSize: 30 }}>Host: {hostName}</div>
+                    </div>
                 </div>
             ),
             {
