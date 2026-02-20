@@ -50,9 +50,20 @@ export async function GET(request: NextRequest) {
 
         let event;
         try {
-            // VANILLA PRISMA: Bypass lib/db and pg-adapter
+            // MANUAL ADAPTER SETUP:
+            // The generated client requires an adapter. We build it manually here using the confirmed working module (pg).
+            const { Pool } = await import('pg');
+            const { PrismaPg } = await import('@prisma/adapter-pg');
             const { PrismaClient } = await import('@prisma/client');
-            const prisma = new PrismaClient();
+
+            const connectionString = process.env.DATABASE_URL;
+            if (!connectionString) {
+                throw new Error("DATABASE_URL is missing in this context (Manual Setup)");
+            }
+
+            const pool = new Pool({ connectionString });
+            const adapter = new PrismaPg(pool);
+            const prisma = new PrismaClient({ adapter });
 
             event = await prisma.event.findUnique({
                 where: { id: eventId },
