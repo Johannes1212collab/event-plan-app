@@ -4,6 +4,7 @@ import { auth, signOut } from "@/auth";
 import { getEventById, getEventMedia } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
 import { AddToCalendar } from "@/components/events/add-to-calendar";
+import { InviteGuestDialog } from "@/components/events/invite-guest-dialog";
 import { QRInvite } from "@/components/events/qr-invite";
 import { EventMap } from "@/components/events/event-map";
 import { MediaGallery } from "@/components/events/media-gallery";
@@ -107,6 +108,7 @@ const EventPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                                         <span className="text-sm font-medium text-slate-700">Actions</span>
                                         <div className="flex gap-2">
                                             <AddToCalendar event={event} />
+                                            <InviteGuestDialog eventId={event.id} />
                                             <QRInvite />
                                         </div>
                                     </div>
