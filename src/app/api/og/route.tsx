@@ -80,9 +80,8 @@ export async function GET(request: NextRequest) {
         // ... existing imports
 
         // Font loading
-        const fontData = await fetch(
-            new URL('https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff', import.meta.url)
-        ).then((res) => res.arrayBuffer());
+        // Font loading removed for stability
+        const fontData = null;
 
         return new ImageResponse(
             (
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest) {
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontFamily: '"Inter"',
+                        fontFamily: 'sans-serif',
                         position: 'relative',
                     }}
                 >
@@ -205,14 +204,6 @@ export async function GET(request: NextRequest) {
             ),
             {
                 width: 1200,
-                height: 630,
-                fonts: [
-                    {
-                        name: 'Inter',
-                        data: fontData,
-                        style: 'normal',
-                    },
-                ],
             }
         );
     } catch (e: any) {
