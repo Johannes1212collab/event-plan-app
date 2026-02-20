@@ -78,9 +78,13 @@ export const createEvent = async (values: any) => {
             },
         });
         // CRITICAL BUGFIX
-        // Pre-warm the brutal 1.5s Vercel Serverless cold starts in the background.
         // Desktop Messenger has a strict 1.0s timeout and will permanently blacklist the URL if either the HTML or Image nodes fail to boot in time.
-        // By fetching both instantly upon creation, the CDN cache is populated fully before the user copies the URL.
+        // We must globally hydrate Next.js's unstable_cache before the user even copies the URL!
+        // By invoking `getEventMetadata` internally within the Server Action, we guarantee 100% read-after-write consistency 
+        // to prevent CDN instances from accidentally caching `null` due to database replica lag.
+        await getEventMetadata(event.id);
+
+        // Now that the internal JSON cache is populated with real object data, safe to pre-warm the actual HTTP routes asynchronously:
         Promise.all([
             fetch(`https://www.eventhub.community/events/${event.id}`),
             fetch(`https://www.eventhub.community/api/og?eventId=${event.id}`)
