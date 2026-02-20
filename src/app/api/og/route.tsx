@@ -50,31 +50,47 @@ export async function GET(request: NextRequest) {
 
         let event;
         try {
-            // MANUAL ADAPTER SETUP:
-            // The generated client requires an adapter. We build it manually here using the confirmed working module (pg).
+            // RAW SQL MODE: Bypassing Prisma entirely
             const { Pool } = await import('pg');
-            const { PrismaPg } = await import('@prisma/adapter-pg');
-            const { PrismaClient } = await import('@prisma/client');
 
             const connectionString = process.env.DATABASE_URL;
             if (!connectionString) {
-                throw new Error("DATABASE_URL is missing in this context (Manual Setup)");
+                throw new Error("DATABASE_URL is missing");
             }
 
-            const pool = new Pool({ connectionString });
-            const adapter = new PrismaPg(pool);
-            const prisma = new PrismaClient({ adapter });
-
-            event = await prisma.event.findUnique({
-                where: { id: eventId },
-                include: { host: true },
+            const pool = new Pool({
+                connectionString,
+                connectionTimeoutMillis: 5000,
+                ssl: { rejectUnauthorized: false } // Typical for Serverless Postgres
             });
+
+            // Note: Prisma tables are usually "ModelName" (quoted). Fields are "fieldName" (quoted).
+            const query = `
+                SELECT e."title", e."date", u."name" as "hostName"
+                FROM "Event" e
+                LEFT JOIN "User" u ON e."hostId" = u."id"
+                WHERE e."id" = $1
+                LIMIT 1
+            `;
+
+            const result = await pool.query(query, [eventId]);
+            await pool.end();
+
+            if (result.rows.length > 0) {
+                const row = result.rows[0];
+                event = {
+                    title: row.title,
+                    date: row.date,
+                    host: { name: row.hostName }
+                };
+            }
+
         } catch (innerDbError: any) {
             console.error('[OG] Inner DB Error:', innerDbError);
             // Return RAW TEXT/JSON instead of ImageResponse to prevent rendering crashes
             return new Response(
                 JSON.stringify({
-                    error: "Database Error",
+                    error: "Database Error (Raw SQL)",
                     message: innerDbError.message,
                     name: innerDbError.name,
                     stack: innerDbError.stack
