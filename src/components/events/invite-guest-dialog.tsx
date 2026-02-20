@@ -17,12 +17,18 @@ import { inviteGuest } from "@/actions/email";
 
 interface InviteGuestDialogProps {
     eventId: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function InviteGuestDialog({ eventId }: InviteGuestDialogProps) {
-    const [open, setOpen] = useState(false);
+export function InviteGuestDialog({ eventId, open, onOpenChange }: InviteGuestDialogProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [email, setEmail] = useState("");
+
+    const isControlled = open !== undefined && onOpenChange !== undefined;
+    const finalOpen = isControlled ? open : internalOpen;
+    const finalSetOpen = isControlled ? onOpenChange : setInternalOpen;
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,7 +41,7 @@ export function InviteGuestDialog({ eventId }: InviteGuestDialogProps) {
                     } else {
                         toast.success("Invitation sent!");
                         setEmail("");
-                        setOpen(false);
+                        finalSetOpen(false);
                     }
                 })
                 .catch(() => toast.error("Something went wrong"));
@@ -43,13 +49,15 @@ export function InviteGuestDialog({ eventId }: InviteGuestDialogProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 active:scale-95 transition-all">
-                    <Mail className="h-4 w-4" />
-                    Invite
-                </Button>
-            </DialogTrigger>
+        <Dialog open={finalOpen} onOpenChange={finalSetOpen}>
+            {!isControlled && (
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2 active:scale-95 transition-all">
+                        <Mail className="h-4 w-4" />
+                        Invite
+                    </Button>
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Invite Guest</DialogTitle>
@@ -71,7 +79,7 @@ export function InviteGuestDialog({ eventId }: InviteGuestDialogProps) {
                         />
                     </div>
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isPending}>
+                        <Button type="button" variant="ghost" onClick={() => finalSetOpen(false)} disabled={isPending}>
                             Cancel
                         </Button>
                         <Button type="submit" disabled={isPending}>

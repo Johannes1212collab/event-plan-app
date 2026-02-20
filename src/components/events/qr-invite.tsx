@@ -13,8 +13,18 @@ import { QrCode } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useEffect, useState } from "react";
 
-export function QRInvite() {
+interface QRInviteProps {
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}
+
+export function QRInvite({ open, onOpenChange }: QRInviteProps) {
     const [url, setUrl] = useState("");
+    const [internalOpen, setInternalOpen] = useState(false);
+
+    const isControlled = open !== undefined && onOpenChange !== undefined;
+    const finalOpen = isControlled ? open : internalOpen;
+    const finalSetOpen = isControlled ? onOpenChange : setInternalOpen;
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -23,13 +33,15 @@ export function QRInvite() {
     }, []);
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                    <QrCode className="h-4 w-4" />
-                    <span className="hidden sm:inline">QR Code</span>
-                </Button>
-            </DialogTrigger>
+        <Dialog open={finalOpen} onOpenChange={finalSetOpen}>
+            {!isControlled && (
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                        <QrCode className="h-4 w-4" />
+                        <span className="hidden sm:inline">QR Code</span>
+                    </Button>
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Invite via QR Code</DialogTitle>
