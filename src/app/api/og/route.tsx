@@ -27,6 +27,46 @@ export async function GET(request: NextRequest) {
             });
         }
 
+        if (eventId === 'trace_render') {
+            return new ImageResponse(
+                (<div style={{ fontSize: 30, background: 'white', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Trace: Render OK</div>),
+                { width: 1200, height: 630 }
+            );
+        }
+
+        if (eventId === 'trace_data') {
+            try {
+                const { Pool } = await import('pg');
+                const connectionString = process.env.DATABASE_URL;
+                const pool = new Pool({
+                    connectionString,
+                    connectionTimeoutMillis: 5000,
+                    ssl: { rejectUnauthorized: false }
+                });
+
+                // Hardcoded ID for testing or use a param if needed,
+                // but let's just test connectivity + query validity.
+                const query = `
+                    SELECT e."title", e."date", u."name" as "hostName"
+                    FROM "Event" e
+                    LEFT JOIN "User" u ON e."hostId" = u."id"
+                    LIMIT 1
+                `;
+                const result = await pool.query(query);
+                await pool.end();
+
+                return new Response(JSON.stringify({ status: 'Data OK', rows: result.rows }, null, 2), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                return new Response(JSON.stringify({ status: 'Data Failed', error: e.message }, null, 2), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+        }
+
         if (eventId === 'debug') {
             return new ImageResponse(
                 (<div style={{ fontSize: 30, background: 'white', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>EventHub: Debug Success</div>),
