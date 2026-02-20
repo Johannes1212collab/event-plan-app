@@ -44,6 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
                     width: 1200,
                     height: 630,
                     alt: event.title,
+                    type: "image/png",
                 }
             ],
             locale: "en_US",
