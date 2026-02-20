@@ -77,6 +77,11 @@ export const createEvent = async (values: any) => {
                 },
             },
         });
+        // CRITICAL BUGFIX
+        // Pre-warm the brutal 1.5s Vercel Serverless/Satori cold start in the background.
+        // Desktop Messenger has a strict 1.0s timeout and will permanently blacklist the URL if the image node fails to boot in time.
+        // By fetching it instantly upon creation, the CDN cache is populated fully by the time the user copies the URL.
+        fetch(`https://www.eventhub.community/api/og?eventId=${event.id}`).catch(console.error);
 
         revalidatePath("/dashboard");
         return { success: "Event created!", eventId: event.id };
