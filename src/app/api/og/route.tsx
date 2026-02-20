@@ -87,39 +87,50 @@ export async function GET(request: NextRequest) {
 
         let event;
         try {
-            // RAW SQL MODE: Bypassing Prisma entirely
-            const { Pool } = await import('pg');
+            // CACHED RAW SQL MODE: Bypassing Prisma and caching the Neon DB connection pool to beat Messenger timeouts
+            const { unstable_cache } = await import('next/cache');
 
-            const connectionString = process.env.DATABASE_URL;
-            if (!connectionString) {
-                throw new Error("DATABASE_URL is missing");
-            }
+            event = await unstable_cache(
+                async () => {
+                    const { Pool } = await import('pg');
+                    const connectionString = process.env.DATABASE_URL;
+                    if (!connectionString) {
+                        throw new Error("DATABASE_URL is missing");
+                    }
 
-            const pool = new Pool({
-                connectionString,
-                connectionTimeoutMillis: 5000,
-                ssl: { rejectUnauthorized: false } // Typical for Serverless Postgres
-            });
+                    const pool = new Pool({
+                        connectionString,
+                        connectionTimeoutMillis: 5000,
+                        ssl: { rejectUnauthorized: false } // Typical for Serverless Postgres
+                    });
 
-            const query = `
-                SELECT e."title", e."date", e."isFullDay", u."name" as "hostName"
-                FROM "Event" e
-                LEFT JOIN "User" u ON e."hostId" = u."id"
-                WHERE e."id" = $1
-                LIMIT 1
-            `;
+                    const query = `
+                        SELECT e."title", e."date", e."isFullDay", u."name" as "hostName"
+                        FROM "Event" e
+                        LEFT JOIN "User" u ON e."hostId" = u."id"
+                        WHERE e."id" = $1
+                        LIMIT 1
+                    `;
 
-            const result = await pool.query(query, [eventId]);
-            await pool.end();
+                    const result = await pool.query(query, [eventId]);
+                    await pool.end();
 
-            if (result.rows.length > 0) {
-                const row = result.rows[0];
-                event = {
-                    title: row.title,
-                    date: row.date,
-                    isFullDay: row.isFullDay,
-                    host: { name: row.hostName }
-                };
+                    if (result.rows.length > 0) {
+                        const row = result.rows[0];
+                        return {
+                            title: row.title,
+                            date: row.date,
+                            isFullDay: row.isFullDay,
+                            host: { name: row.hostName }
+                        };
+                    }
+                    return null;
+                },
+                [`og-sql-event-${eventId}`],
+                { revalidate: 3600, tags: [`event-${eventId}`] }
+            )();
+
+            if (event) {
                 console.log(`[OG] Event data found for ${eventId}:`, event);
             }
 
