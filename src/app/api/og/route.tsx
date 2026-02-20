@@ -6,8 +6,9 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const eventId = searchParams.get('eventId');
+        const { searchParams } = request.nextUrl;
+        const rawEventId = searchParams.get('eventId');
+        const eventId = rawEventId?.trim();
 
         if (eventId === 'debug') {
             return new ImageResponse(
@@ -42,14 +43,20 @@ export async function GET(request: NextRequest) {
                             width: '100%',
                             height: '100%',
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
                             backgroundColor: '#fff',
                             fontSize: 32,
                             fontWeight: 600,
+                            padding: 40,
+                            textAlign: 'center',
                         }}
                     >
-                        EventHub: Missing Event ID
+                        <div>EventHub: Missing Event ID</div>
+                        <div style={{ fontSize: 16, marginTop: 20, color: '#999', maxWidth: '80%', wordBreak: 'break-all' }}>
+                            URL: {request.url}
+                        </div>
                     </div>
                 ),
                 {
