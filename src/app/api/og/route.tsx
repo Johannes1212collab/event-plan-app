@@ -13,7 +13,54 @@ export async function GET(request: Request) {
     const id = searchParams.get('eventId');
 
     if (!id) {
-        return new Response("Missing eventId", { status: 400 });
+        const defaultImageRes = new ImageResponse(
+            (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
+                    background: 'white',
+                    color: 'black',
+                    padding: '60px',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginBottom: '50px' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'black',
+                            color: 'white',
+                            borderRadius: '24px',
+                            width: '120px',
+                            height: '120px',
+                            fontSize: '56px',
+                            fontWeight: 'bold',
+                        }}>
+                            EH
+                        </div>
+                        <div style={{ fontSize: 80, fontWeight: 'bold' }}>EventHub</div>
+                    </div>
+
+                    <div style={{ fontSize: 48, color: '#64748b' }}>
+                        Plan Events. Invite Friends. Share Memories.
+                    </div>
+                </div>
+            ),
+            { ...size }
+        );
+
+        const defaultImageBuffer = await defaultImageRes.arrayBuffer();
+        return new Response(defaultImageBuffer, {
+            status: 200,
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': String(defaultImageBuffer.byteLength),
+                'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+            }
+        });
     }
 
     let event;

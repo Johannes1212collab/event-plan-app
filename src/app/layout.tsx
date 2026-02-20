@@ -25,6 +25,15 @@ export const metadata: Metadata = {
     description: "The easiest way to organize gatherings and keep all your photos and chats in one place.",
     url: "https://www.eventhub.community",
     siteName: "EventHub",
+    images: [
+      {
+        url: "https://www.eventhub.community/api/og",
+        width: 1200,
+        height: 630,
+        alt: "EventHub",
+        type: "image/png",
+      }
+    ],
     locale: "en_US",
     type: "website",
   },
@@ -32,6 +41,14 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EventHub",
     description: "Plan Events. Invite Friends. Share Memories.",
+    images: [
+      {
+        url: "https://www.eventhub.community/api/og",
+        width: 1200,
+        height: 630,
+        alt: "EventHub",
+      }
+    ],
   },
   other: {
     "fb:app_id": "123456789012345",
