@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const description = `${dateStr}${timeStr} • Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 50) + "..." : ""}`;
 
     return {
-        title: `${event.title} - EventHub`,
+        title: event.title,
         description: description,
         openGraph: {
             title: event.title,

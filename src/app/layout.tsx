@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     title: "EventHub",
     description: "Plan Events. Invite Friends. Share Memories.",
   },
+  other: {
+    "fb:app_id": "123456789012345",
+  }
 };
 
 export default function RootLayout({
@@ -41,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" prefix="og: http://ogp.me/ns#">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
