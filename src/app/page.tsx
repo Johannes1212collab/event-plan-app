@@ -36,7 +36,7 @@ export default async function Home() {
                   Plan Events. Invite Friends. Share Memories.
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  The easiest way to organize gatherings and keep all your photos and chats in one place.
+                  The easiest way to organize gatherings, keep all your photos, memories and excitement in one place.
                 </p>
               </div>
               <div className="space-x-4">
