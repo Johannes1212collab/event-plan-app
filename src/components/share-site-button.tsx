@@ -28,7 +28,7 @@ export const ShareSiteButton = () => {
     };
 
     return (
-        <Button variant="outline" size="sm" onClick={handleShare} className="hidden sm:flex ml-2">
+        <Button variant="outline" size="sm" onClick={handleShare} className="ml-2 flex">
             <Share className="h-4 w-4 mr-2" />
             Share EventHub
         </Button>

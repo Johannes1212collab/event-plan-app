@@ -55,12 +55,12 @@ const DashboardPage = async () => {
             </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
+                <div className="flex items-start justify-between mb-8 gap-4">
+                    <div className="pr-4 sm:pr-0 max-w-[75%]">
                         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Your Events</h2>
                         <p className="text-slate-500 mt-1">Manage your upcoming events and invitations.</p>
                     </div>
-                    <Button asChild className="shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow" id="new-event-btn">
+                    <Button asChild className="shrink-0 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow mt-1" id="new-event-btn">
                         <Link href="/events/create">
                             <Plus className="h-4 w-4 mr-2" />
                             New Event
