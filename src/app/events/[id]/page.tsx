@@ -14,6 +14,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import { OnboardingTour } from "@/components/onboarding-tour";
+import { AutoJoiner } from "@/components/events/auto-joiner";
+
 
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 
@@ -81,12 +83,15 @@ const EventPage = async (props: EventPageProps) => {
     // For now, assume if you have the link (and probably added to participant on creation or join)
     // We need a 'Join' flow if not participant. But let's keep it simple: if you see it, you can chat.
     // Or better: auto-join if you have the link?
+    const isParticipant = event.participants.some((p: any) => p.userId === session?.user?.id);
+
 
     // ... existing imports ...
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <OnboardingTour hasSeenOnboarding={user?.hasSeenOnboarding ?? false} page="event" />
+            {!isParticipant && <AutoJoiner eventId={event.id} />}
             <header className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-x-2 font-bold text-lg hover:opacity-80 transition-opacity">

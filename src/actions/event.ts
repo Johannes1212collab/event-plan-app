@@ -182,3 +182,42 @@ export const deleteEvent = async (eventId: string) => {
         return { error: "Failed to delete event" };
     }
 };
+
+export const joinEvent = async (eventId: string) => {
+    const session = await auth();
+
+    if (!session || !session.user || !session.user.id) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const existingParticipant = await db.participant.findUnique({
+            where: {
+                userId_eventId: {
+                    userId: session.user.id,
+                    eventId: eventId,
+                },
+            },
+        });
+
+        if (existingParticipant) {
+            return { success: "Already joined" };
+        }
+
+        await db.participant.create({
+            data: {
+                userId: session.user.id,
+                eventId: eventId,
+                role: "GUEST",
+            },
+        });
+
+        revalidatePath(`/events/${eventId}`);
+        revalidatePath("/dashboard");
+
+        return { success: "Joined event successfully" };
+    } catch (error) {
+        console.error("Error joining event:", error);
+        return { error: "Failed to join event" };
+    }
+};
