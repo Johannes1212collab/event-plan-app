@@ -6,6 +6,26 @@ import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+export const getEventMetadata = async (id: string) => {
+    const event = await db.event.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            date: true,
+            location: true,
+            host: {
+                select: {
+                    name: true,
+                }
+            }
+        }
+    });
+    return event;
+};
+
+
 export const createEvent = async (values: any) => {
     const session = await auth();
 

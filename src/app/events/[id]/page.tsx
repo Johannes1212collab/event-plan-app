@@ -1,7 +1,7 @@
 
 import { Metadata } from "next";
 import { auth, signOut } from "@/auth";
-import { getEventById, getEventMedia } from "@/actions/event";
+import { getEventById, getEventMedia, getEventMetadata } from "@/actions/event";
 import { Chat } from "@/components/events/chat";
 import { EventActionsMenu } from "@/components/events/event-actions-menu";
 import { QRInvite } from "@/components/events/qr-invite";
@@ -21,7 +21,7 @@ import { DeleteEventButton } from "@/components/events/delete-event-button";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const event = await getEventById(id);
+    const event = await getEventMetadata(id);
 
     if (!event) {
         return {
