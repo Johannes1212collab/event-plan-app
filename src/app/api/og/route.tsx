@@ -174,7 +174,20 @@ export async function GET(request: NextRequest) {
         });
 
 
-        // SIMPLIFIED RENDER: Debugging crash by removing complex styles
+        // DEBUGGING: Return JSON content to verify logic/db works before rendering
+        // return new ImageResponse( ... )
+
+        return new Response(JSON.stringify({
+            status: "Debug Logic OK",
+            event: event,
+            dateStr,
+            timeStr
+        }, null, 2), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        /*
         return new ImageResponse(
             (
                 <div style={{
@@ -197,6 +210,7 @@ export async function GET(request: NextRequest) {
                 // height: 630, // Defaults are usually fine
             }
         );
+        */
     } catch (e: any) {
         console.log(`${e.message}`);
         // GLOBAL ERROR CATCH: Return JSON so we can diagnose rendering/font failures
