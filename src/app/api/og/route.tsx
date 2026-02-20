@@ -83,11 +83,6 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // DB CHECK
-        // if (!db) {
-        //     throw new Error("Database client (db) is undefined");
-        // }
-
         console.log(`[OG] Fetching event: ${eventId}`);
 
         let event;
@@ -161,38 +156,11 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // Formatting date
-        const eventDate = new Date(event.date);
-        const dateStr = eventDate.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-        });
-        const timeStr = eventDate.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-        });
-
-
-        // DEBUGGING: Return JSON content to verify logic/db works before rendering
-        /*
-        return new Response(JSON.stringify({ 
-            status: "Debug Logic OK", 
-            event: event,
-            dateStr,
-            timeStr
-        }, null, 2), {
-             status: 200,
-             headers: { 'Content-Type': 'application/json' }
-        });
-        */
-
-        // MINIMAL TEST 6: 3rd Child Structure Test (No color/margin)
+        // MINIMAL TEST 8: Substitution (Title + Host, NO DATE)
         const hostName = "HARDCODED HOST TEST";
-
         const titleSafe = event.title || 'Untitled Event';
 
-        console.log(`[OG] Real Host Variable: ${event.host?.name}`); // Verify access doesn't crash JS logic
+        console.log(`[OG] Rendering Loop - Test 8 (Substitution)`);
 
         return new ImageResponse(
             (
@@ -209,11 +177,8 @@ export async function GET(request: NextRequest) {
                 }}>
                     <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
 
-                    {/* TEST 7: Nested Grouping to avoid >2 direct children */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ fontSize: 30, marginTop: 20 }}>{dateStr}</div>
-                        <div style={{ fontSize: 30 }}>Host: {hostName}</div>
-                    </div>
+                    {/* TEST 8: Substitution. If this works, Host String is innocent. */}
+                    <div style={{ fontSize: 30, marginTop: 20 }}>Host: {hostName}</div>
                 </div>
             ),
             {
