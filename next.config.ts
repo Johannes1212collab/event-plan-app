@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/events/:id/og.png',
+        destination: '/api/og?eventId=:id',
+      },
+      {
+        source: '/og.png',
+        destination: '/opengraph-image',
+      }
+    ];
+  },
 };
 
 export default nextConfig;
