@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Calendar, MapPin, User, LogOut, Share2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import db from "@/lib/db";
+import { OnboardingTour } from "@/components/onboarding-tour";
 
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 
