@@ -52,7 +52,8 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         if (scrollRef.current) {
             // Check if we are near the bottom
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-            const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+            // 200px threshold allows for tall image incoming messages to still trigger scroll
+            const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
 
             // Only force scroll if user is near bottom or we literally just sent a message quickly
             // But realistically just doing it indiscriminately is what initial version did. 
@@ -61,7 +62,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             }
         }
-    }, [optimisticMessages]);
+    }, [optimisticMessages, realMessages]);
 
     // Polling logic
     useEffect(() => {
