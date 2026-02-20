@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 
 import db from "@/lib/db";
 import { OnboardingTour } from "@/components/onboarding-tour";
+import { ShareSiteButton } from "@/components/share-site-button";
 
 const DashboardPage = async () => {
     const session = await auth();
@@ -36,7 +37,7 @@ const DashboardPage = async () => {
                     </Link>
 
                     <div className="flex items-center gap-x-4">
-
+                        <ShareSiteButton />
                         <span className="text-sm font-medium text-slate-700">
                             {session.user.name}
                         </span>
