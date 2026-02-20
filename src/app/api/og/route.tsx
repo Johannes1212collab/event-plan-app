@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = request.nextUrl;
+        const { searchParams } = new URL(request.url);
         const rawEventId = searchParams.get('eventId');
         const eventId = rawEventId?.trim();
 
@@ -43,20 +43,14 @@ export async function GET(request: NextRequest) {
                             width: '100%',
                             height: '100%',
                             display: 'flex',
-                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
                             backgroundColor: '#fff',
                             fontSize: 32,
                             fontWeight: 600,
-                            padding: 40,
-                            textAlign: 'center',
                         }}
                     >
-                        <div>EventHub: Missing Event ID</div>
-                        <div style={{ fontSize: 16, marginTop: 20, color: '#999', maxWidth: '80%', wordBreak: 'break-all' }}>
-                            URL: {request.url}
-                        </div>
+                        EventHub: Missing Event ID
                     </div>
                 ),
                 {
@@ -67,7 +61,7 @@ export async function GET(request: NextRequest) {
         }
 
         console.log(`[OG] Fetching event: ${eventId}`);
-        console.log(`[OG] Fetching event: ${eventId}`);
+
         let event;
         try {
             event = await db.event.findUnique({
@@ -75,7 +69,7 @@ export async function GET(request: NextRequest) {
                 include: { host: true },
             });
         } catch (dbError: any) {
-            console.error("[OG] DB Error:", dbError);
+            console.error(`[OG] DB Error (FindUnique): ${dbError.message}`, dbError);
             return new ImageResponse(
                 (
                     <div
@@ -131,7 +125,7 @@ export async function GET(request: NextRequest) {
                             ID: {eventId}
                         </div>
                         <div style={{ fontSize: 16, marginTop: 10, color: '#999' }}>
-                            Direct DB access
+                            Direct DB access (Safe Revert)
                         </div>
                     </div>
                 ),
@@ -154,9 +148,6 @@ export async function GET(request: NextRequest) {
             minute: '2-digit',
         });
 
-
-        // Font loading removed for stability
-        const fontData = null;
 
         return new ImageResponse(
             (
@@ -279,7 +270,7 @@ export async function GET(request: NextRequest) {
             ),
             {
                 width: 1200,
-                // height: 630, // removed to match last version diff? No, keep it standard. Valid ImageResponse options.
+                // height: 630, 
             }
         );
     } catch (e: any) {
@@ -298,7 +289,8 @@ export async function GET(request: NextRequest) {
                         fontWeight: 600,
                     }}
                 >
-                    EventHub: Failed to generate image
+                    EventHub: Failed to generate image (Outer Catch)
+                    <div style={{ fontSize: 16, marginTop: 20 }}>{e.message}</div>
                 </div>
             ),
             {
