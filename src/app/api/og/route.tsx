@@ -66,46 +66,45 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        console.log(`[OG] Fetching event: ${eventId}`);
         const event = await db.event.findUnique({
             where: { id: eventId },
             include: { host: true },
         });
 
         if (!event) {
-            if (!event) {
-                console.error(`Event not found for ID: ${eventId} (Length: ${eventId.length})`);
-                return new ImageResponse(
-                    (
-                        <div
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: '#fff',
-                                fontSize: 32,
-                                fontWeight: 600,
-                                padding: 40,
-                                textAlign: 'center',
-                            }}
-                        >
-                            <div>EventHub: Event Not Found</div>
-                            <div style={{ fontSize: 24, marginTop: 20, color: '#666' }}>
-                                ID: {eventId}
-                            </div>
-                            <div style={{ fontSize: 16, marginTop: 10, color: '#999' }}>
-                                Length: {eventId.length}
-                            </div>
+            console.error(`[OG] Event not found: ${eventId} (Len: ${eventId.length})`);
+            return new ImageResponse(
+                (
+                    <div
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#fff',
+                            fontSize: 32,
+                            fontWeight: 600,
+                            padding: 40,
+                            textAlign: 'center',
+                        }}
+                    >
+                        <div>EventHub: Event Not Found</div>
+                        <div style={{ fontSize: 24, marginTop: 20, color: '#666' }}>
+                            ID: {eventId}
                         </div>
-                    ),
-                    {
-                        width: 1200,
-                        height: 630,
-                    }
-                );
-            }
+                        <div style={{ fontSize: 16, marginTop: 10, color: '#999' }}>
+                            Direct DB access
+                        </div>
+                    </div>
+                ),
+                {
+                    width: 1200,
+                    height: 630,
+                }
+            );
         }
 
         // Formatting date
@@ -121,9 +120,6 @@ export async function GET(request: NextRequest) {
         });
 
 
-        // ... existing imports
-
-        // Font loading
         // Font loading removed for stability
         const fontData = null;
 
@@ -248,6 +244,7 @@ export async function GET(request: NextRequest) {
             ),
             {
                 width: 1200,
+                // height: 630, // removed to match last version diff? No, keep it standard. Valid ImageResponse options.
             }
         );
     } catch (e: any) {
