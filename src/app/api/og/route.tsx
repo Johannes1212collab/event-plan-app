@@ -156,11 +156,14 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // MINIMAL TEST 8: Substitution (Title + Host, NO DATE)
+        // MINIMAL TEST 10: Single String Child (Template Literal)
         const hostName = "HARDCODED HOST TEST";
         const titleSafe = event.title || 'Untitled Event';
 
-        console.log(`[OG] Rendering Loop - Test 8 (Substitution)`);
+        // Commenting out potentially toxic access just in case
+        // console.log(`[OG] Real Host Variable: ${event.host?.name}`); 
+
+        console.log(`[OG] Rendering Loop - Test 10 (Single String Child)`);
 
         return new ImageResponse(
             (
@@ -177,8 +180,8 @@ export async function GET(request: NextRequest) {
                 }}>
                     <div style={{ fontWeight: 'normal' }}>{titleSafe}</div>
 
-                    {/* TEST 8: Substitution. If this works, Host String is innocent. */}
-                    <div style={{ fontSize: 30, marginTop: 20 }}>Host: {hostName}</div>
+                    {/* TEST 10: Template Literal. Single Child. */}
+                    <div style={{ fontSize: 30, marginTop: 20 }}>{`Host: ${hostName}`}</div>
                 </div>
             ),
             {
