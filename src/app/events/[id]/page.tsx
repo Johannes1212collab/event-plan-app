@@ -20,54 +20,64 @@ import { AutoJoiner } from "@/components/events/auto-joiner";
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-    const { id } = await params;
-    const event = await getEventMetadata(id);
+    try {
+        const { id } = await params;
+        const event = await getEventMetadata(id);
 
-    if (!event) {
-        return {
-            title: "Event Not Found",
-            description: "The event you are looking for does not exist.",
+        if (!event) {
+            return {
+                title: "Event Not Found",
+                description: "The event you are looking for does not exist.",
+            }
         }
-    }
 
-    const eventDate = new Date(event.date);
-    const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeStr = event.isFullDay ? '' : ` at ${eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-    const description = `${dateStr}${timeStr} • Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 50) + "..." : ""}`;
+        const eventDate = new Date(event.date);
+        const dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = event.isFullDay ? '' : ` at ${eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+        const description = `${dateStr}${timeStr} • Hosted by ${event.host.name}. ${event.description ? event.description.slice(0, 50) + "..." : ""}`;
 
-    return {
-        title: event.title,
-        description: description,
-        openGraph: {
+        return {
             title: event.title,
             description: description,
-            url: `https://www.eventhub.community/events/${event.id}`,
-            siteName: "EventHub",
-            images: [
-                {
-                    url: `https://www.eventhub.community/api/og?eventId=${event.id}`,
-                    width: 1200,
-                    height: 630,
-                    alt: event.title,
-                    type: "image/png",
-                }
-            ],
-            locale: "en_US",
-            type: "website",
-        },
-        twitter: {
-            card: "summary_large_image",
-            title: event.title,
-            description: description,
-            images: [
-                {
-                    url: `https://www.eventhub.community/api/og?eventId=${event.id}`,
-                    width: 1200,
-                    height: 630,
-                    alt: event.title,
-                }
-            ],
-        },
+            openGraph: {
+                title: event.title,
+                description: description,
+                url: `https://www.eventhub.community/events/${event.id}`,
+                siteName: "EventHub",
+                images: [
+                    {
+                        url: `https://www.eventhub.community/api/og?eventId=${event.id}`,
+                        width: 1200,
+                        height: 630,
+                        alt: event.title,
+                        type: "image/png",
+                    }
+                ],
+                locale: "en_US",
+                type: "website",
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: event.title,
+                description: description,
+                images: [
+                    {
+                        url: `https://www.eventhub.community/api/og?eventId=${event.id}`,
+                        width: 1200,
+                        height: 630,
+                        alt: event.title,
+                    }
+                ],
+            },
+        }
+    } catch (e: any) {
+        return {
+            title: "Metadata Error",
+            openGraph: {
+                title: "Error: " + e.message,
+                description: String(e.stack).substring(0, 200),
+            }
+        }
     }
 }
 
