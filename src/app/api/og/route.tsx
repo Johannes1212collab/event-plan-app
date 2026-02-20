@@ -187,125 +187,25 @@ export async function GET(request: NextRequest) {
         });
         */
 
-        // SAFE PREMIUM DESIGN (Bisecting: Solid BG, No Absolute, No Truncation)
+        // MINIMAL TEST 2: Testing Host Data + Font Weight
         return new ImageResponse(
             (
-                <div
-                    style={{
-                        background: '#f8fafc', // SOLID COLOR ONLY
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontFamily: 'sans-serif',
-                        // position: 'relative', // Removed relative/absolute context
-                    }}
-                >
-                    {/* Logo - Moved to standard flow top */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            marginBottom: 40, // Spacing instead of absolute
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: 40,
-                                height: 40,
-                                background: '#0f172a',
-                                borderRadius: 8,
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 20,
-                                fontWeight: 'bold',
-                                marginRight: 12,
-                            }}
-                        >
-                            EH
-                        </div>
-                        <div style={{ fontSize: 32, fontWeight: 'bold', color: '#0f172a' }}>EventHub</div>
-                    </div>
-
-                    {/* Main Content */}
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            textAlign: 'center',
-                            padding: '0 80px',
-                            // maxWidth: '900px', // Removed max-width
-                        }}
-                    >
-                        {/* Title */}
-                        <div
-                            style={{
-                                fontSize: 72,
-                                fontWeight: '800',
-                                color: '#0f172a',
-                                marginBottom: 24,
-                                lineHeight: 1.1,
-                                letterSpacing: '-0.02em',
-                                // REMOVED TRUNCATION LOGIC
-                            }}
-                        >
-                            {event.title}
-                        </div>
-
-                        {/* Date & Time */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                fontSize: 36,
-                                color: '#475569',
-                                marginBottom: 32,
-                            }}
-                        >
-                            <div>{dateStr}</div>
-                            <div style={{ margin: '0 16px', color: '#cbd5e1' }}>•</div>
-                            <div>{timeStr}</div>
-                        </div>
-
-                        {/* Host Badge */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                background: 'white',
-                                padding: '12px 24px',
-                                borderRadius: 9999,
-                                border: '1px solid #e2e8f0',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: 9999,
-                                    background: '#cbd5e1',
-                                    marginRight: 12,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    overflow: 'hidden',
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: 'white',
-                                }}
-                            >
-                                {event.host?.name ? event.host.name[0].toUpperCase() : '?'}
-                            </div>
-                            <div style={{ fontSize: 20, fontWeight: '500', color: '#334155' }}>
-                                Hosted by {event.host?.name || 'Unknown'}
-                            </div>
-                        </div>
-                    </div>
+                <div style={{
+                    display: 'flex',
+                    background: 'white',
+                    width: '100%',
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    fontSize: 50,
+                    borderRadius: 20, // Test Border
+                }}>
+                    <div style={{ fontWeight: 900 }}>{event.title}</div> {/* Test Font Weight */}
+                    <div style={{ fontSize: 30, marginTop: 20 }}>{dateStr}</div>
+                    <div style={{ fontSize: 30, marginTop: 20, color: 'blue' }}>
+                        Host: {event.host?.name || 'Unknown'}
+                    </div> {/* Test Host Data */}
                 </div>
             ),
             {
