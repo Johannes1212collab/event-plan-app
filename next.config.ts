@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/events/:id/og.png',
+        destination: '/api/og?eventId=:id',
+      },
+      {
+        source: '/events/:id/:hash/og.png',
+        destination: '/api/og?eventId=:id',
+      }
+    ];
+  },
 };
 
 export default nextConfig;

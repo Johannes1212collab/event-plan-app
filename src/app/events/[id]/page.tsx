@@ -43,6 +43,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             description: description,
             url: `/events/${event.id}`,
             siteName: "EventHub",
+            images: [
+                {
+                    url: `/events/${event.id}/v14/og.png`,
+                    width: 1200,
+                    height: 630,
+                    alt: event.title,
+                    type: "image/png",
+                }
+            ],
             locale: "en_US",
             type: "website",
         },
@@ -50,6 +59,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             card: "summary_large_image",
             title: event.title,
             description: description,
+            images: [
+                {
+                    url: `/events/${event.id}/v14/og.png`,
+                    width: 1200,
+                    height: 630,
+                    alt: event.title,
+                }
+            ],
         },
     }
 }

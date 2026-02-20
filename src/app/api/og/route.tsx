@@ -7,10 +7,14 @@ export const size = {
     width: 1200,
     height: 630,
 }
-export const contentType = 'image/png'
 
-export default async function Image({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('eventId');
+
+    if (!id) {
+        return new Response("Missing eventId", { status: 400 });
+    }
 
     let event;
     try {
@@ -56,32 +60,12 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             { revalidate: 3600, tags: [`event-${id}`] }
         )();
     } catch (e: any) {
-        console.error('[OG Native] Inner DB Error:', e);
-        return new ImageResponse(
-            (
-                <div style={{
-                    width: '100%', height: '100%', background: '#fff',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <div style={{ fontSize: 30, color: '#333' }}>Error Loading Event</div>
-                </div>
-            ),
-            { ...size }
-        );
+        console.error('[OG API] Inner DB Error:', e);
+        return new Response("Error loading event", { status: 500 });
     }
 
     if (!event) {
-        return new ImageResponse(
-            (
-                <div style={{
-                    width: '100%', height: '100%', background: '#fff',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <div style={{ fontSize: 30, color: '#333' }}>Event Not Found</div>
-                </div>
-            ),
-            { ...size }
-        );
+        return new Response("Event Not Found", { status: 404 });
     }
 
     const eventDate = new Date(event.date);
@@ -90,7 +74,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
     const hostName = event.host?.name || "Unknown Host";
     const titleSafe = event.title || 'Untitled Event';
 
-    return new ImageResponse(
+    const imageRes = new ImageResponse(
         (
             <div style={{
                 display: 'flex',
@@ -149,4 +133,15 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             ...size
         }
     );
+
+    const imageBuffer = await imageRes.arrayBuffer();
+
+    return new Response(imageBuffer, {
+        status: 200,
+        headers: {
+            'Content-Type': 'image/png',
+            'Content-Length': String(imageBuffer.byteLength),
+            'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
+        }
+    });
 }
