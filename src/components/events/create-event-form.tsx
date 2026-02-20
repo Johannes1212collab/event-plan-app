@@ -20,6 +20,14 @@ export const CreateEventForm = () => {
     const [isPending, startTransition] = useTransition();
     const [locationData, setLocationData] = useState<{ address: string; lat: number; lng: number } | null>(null);
     const [isFullDay, setIsFullDay] = useState(false);
+
+    // Default initial dates
+    const initialDate = new Date();
+    const [datePart, setDatePart] = useState(initialDate.toISOString().split('T')[0]);
+    // Round to next hour
+    initialDate.setHours(initialDate.getHours() + 1, 0, 0, 0);
+    const [timePart, setTimePart] = useState(initialDate.toTimeString().slice(0, 5));
+
     const router = useRouter();
 
     const onSubmit = (formData: FormData) => {
@@ -28,14 +36,20 @@ export const CreateEventForm = () => {
 
         const title = formData.get("title") as string;
         const description = formData.get("description") as string;
-        const date = formData.get("date") as string;
+        const _isFullDay = formData.get("isFullDay") === "on";
+
+        // Construct the combined date string properly
+        const combinedDateString = _isFullDay
+            ? `${datePart}T00:00:00.000Z`
+            : new Date(`${datePart}T${timePart}`).toISOString();
+
         // Use location from state if available, otherwise form data (fallback) -> actually just override with state if present
         const location = locationData ? locationData.address : (formData.get("location") as string);
         const lat = locationData?.lat;
         const lng = locationData?.lng;
 
         startTransition(() => {
-            createEvent({ title, description, date, isFullDay, location, lat, lng })
+            createEvent({ title, description, date: combinedDateString, isFullDay: _isFullDay, location, lat, lng })
                 .then((data) => {
                     if (data.error) {
                         setError(data.error);
@@ -97,13 +111,30 @@ export const CreateEventForm = () => {
                                         <label htmlFor="isFullDay" className="text-sm font-medium text-slate-700 cursor-pointer">Full Day</label>
                                     </div>
                                 </div>
-                                <Input
-                                    id="date"
-                                    name="date"
-                                    disabled={isPending}
-                                    type={isFullDay ? "date" : "datetime-local"}
-                                    required
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="datePart"
+                                        name="datePart"
+                                        disabled={isPending}
+                                        type="date"
+                                        value={datePart}
+                                        onChange={(e) => setDatePart(e.target.value)}
+                                        required
+                                        className="flex-1 text-slate-900 border-slate-300"
+                                    />
+                                    {!isFullDay && (
+                                        <Input
+                                            id="timePart"
+                                            name="timePart"
+                                            disabled={isPending}
+                                            type="time"
+                                            value={timePart}
+                                            onChange={(e) => setTimePart(e.target.value)}
+                                            required
+                                            className="w-32 text-slate-900 border-slate-300"
+                                        />
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Location</label>

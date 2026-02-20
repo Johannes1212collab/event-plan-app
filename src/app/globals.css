@@ -2,18 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #09090b;
+  --foreground: #020617; /* Very dark slate, better contrast than #09090b */
   --card: #ffffff;
-  --card-foreground: #09090b;
+  --card-foreground: #020617;
   --popover: #ffffff;
-  --popover-foreground: #09090b;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
+  --popover-foreground: #020617;
+  --primary: #0f172a; /* Darker primary */
+  --primary-foreground: #f8fafc;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569; /* Darker gray for readable muted text */
+  --accent: #f1f5f9;
   --accent-foreground: #18181b;
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;

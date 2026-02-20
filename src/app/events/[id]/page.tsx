@@ -104,7 +104,7 @@ const EventPage = async (props: EventPageProps) => {
                 <p>You must be logged in to view this event.</p>
                 <form action={async () => {
                     "use server";
-                    await signOut({ redirectTo: "/login" });
+                    await signOut({ redirectTo: `/login?callbackUrl=/events/${params.id}` });
                 }}>
                     <Button>Sign In</Button>
                 </form>
