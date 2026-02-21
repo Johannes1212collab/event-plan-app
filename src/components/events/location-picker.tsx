@@ -72,7 +72,7 @@ export default function LocationPicker({
                         onChange={(e) => setValue(e.target.value)}
                         placeholder="Search for a venue (e.g. London)..."
                         className="pl-10"
-                        disabled={!isLoaded || !ready}
+                        disabled={!isLoaded}
                     />
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
