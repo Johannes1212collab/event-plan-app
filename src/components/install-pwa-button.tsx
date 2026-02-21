@@ -9,11 +9,15 @@ export function InstallPWAButton() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isInstallable, setIsInstallable] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const [isInAppBrowser, setIsInAppBrowser] = useState(false);
 
     useEffect(() => {
         // Check if the user is on an iOS device
-        const userAgent = window.navigator.userAgent.toLowerCase();
+        const userAgent = (window.navigator.userAgent || window.navigator.vendor).toLowerCase();
         setIsIOS(/iphone|ipad|ipod/.test(userAgent));
+
+        // Check for common in-app browsers (Facebook, Instagram, TikTok, Snapchat, WeChat, etc)
+        setIsInAppBrowser(/fbav|fban|instagram|tiktok|line|snapchat|wechat|micromessenger/i.test(userAgent));
 
         const handleBeforeInstallPrompt = (e: any) => {
             // Prevent the mini-infobar from appearing on mobile
@@ -39,6 +43,14 @@ export function InstallPWAButton() {
     }, []);
 
     const handleInstallClick = async () => {
+        if (isInAppBrowser) {
+            toast("Open in System Browser", {
+                description: "You are viewing this inside another app. Please tap the menu icon (⋮) in the top corner and select 'Open in Chrome/Safari' to install EventHub.",
+                duration: 8000,
+            });
+            return;
+        }
+
         if (!deferredPrompt && isIOS) {
             // iOS Safari does not support beforeinstallprompt.
             // Provide fallback manual instructions.
@@ -50,7 +62,7 @@ export function InstallPWAButton() {
         }
 
         if (!deferredPrompt) {
-            toast.info("App is already installed or your browser doesn't support automatic installation.");
+            toast.info("App is already installed, or your browser window doesn't support automatic installation.");
             return;
         }
 
