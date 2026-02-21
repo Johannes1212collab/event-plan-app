@@ -58,8 +58,21 @@ export function NotificationsManager() {
         setIsLoading(true);
 
         try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.subscribe({
+            // Explicitly request notification permission *first* so the browser doesn't block the prompt natively
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Permission not granted');
+            }
+
+            // Attempt to get the service worker, with a timeout so it doesn't hang infinitely
+            const swRegistration = await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise<ServiceWorkerRegistration>((_, reject) =>
+                    setTimeout(() => reject(new Error("Service Worker timeout")), 5000)
+                )
+            ]);
+
+            const subscription = await swRegistration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
             });
@@ -123,9 +136,9 @@ export function NotificationsManager() {
             onClick={isSubscribed ? unsubscribeButtonOnClick : subscribeButtonOnClick}
             disabled={isLoading}
             className={`flex items-center gap-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${isLoading ? 'opacity-70 cursor-not-allowed bg-slate-100 text-slate-500 border-slate-200' :
-                    isSubscribed
-                        ? 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
-                        : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 shadow-sm'
+                isSubscribed
+                    ? 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
+                    : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 shadow-sm'
                 }`}
         >
             {isLoading ? (
