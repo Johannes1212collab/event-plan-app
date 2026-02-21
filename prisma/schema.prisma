@@ -24,6 +24,7 @@ model User {
   messages      Message[]
   accounts      Account[]
   hasSeenOnboarding Boolean @default(false)
+  pushSubscriptions PushSubscription[]
 }
 
 model Account {
@@ -96,4 +97,15 @@ model Message {
 
   event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -11,6 +11,7 @@ import db from "@/lib/db";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { ShareSiteButton } from "@/components/share-site-button";
 import { InstallPWAButton } from "@/components/install-pwa-button";
+import { NotificationsManager } from "@/components/notifications-manager";
 
 const DashboardPage = async () => {
     const session = await auth();
@@ -35,6 +36,7 @@ const DashboardPage = async () => {
                     <InstallPWAButton />
 
                     <div className="flex items-center gap-x-2 sm:gap-x-4">
+                        <NotificationsManager />
                         <ShareSiteButton />
                         <span className="text-sm font-medium text-slate-700 truncate max-w-[100px] sm:max-w-none">
                             {session.user.name}
