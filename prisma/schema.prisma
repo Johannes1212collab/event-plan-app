@@ -93,10 +93,13 @@ model Message {
   mediaType String? // IMAGE, VIDEO
   eventId   String
   senderId  String
+  replyToId String?
   createdAt DateTime @default(now())
 
-  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  event   Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sender  User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies Message[] @relation("MessageReplies")
 }
 
 model PushSubscription {
