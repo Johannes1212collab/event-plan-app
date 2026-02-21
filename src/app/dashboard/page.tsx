@@ -12,6 +12,8 @@ import { OnboardingTour } from "@/components/onboarding-tour";
 import { ShareSiteButton } from "@/components/share-site-button";
 import { InstallPWAButton } from "@/components/install-pwa-button";
 import { NotificationsManager } from "@/components/notifications-manager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EventScanner from "@/components/dashboard/event-scanner";
 
 const DashboardPage = async () => {
     const session = await auth();
@@ -57,58 +59,71 @@ const DashboardPage = async () => {
             </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-start justify-between mb-8 gap-4">
-                    <div className="pr-4 sm:pr-0 max-w-[75%]">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Your Events</h2>
-                        <p className="text-slate-500 mt-1">Manage your upcoming events and invitations.</p>
-                    </div>
-                    <Button asChild className="shrink-0 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow mt-1" id="new-event-btn">
-                        <Link href="/events/create">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Event
-                        </Link>
-                    </Button>
-                </div>
+                <Tabs defaultValue="my-events" className="w-full">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                        <TabsList className="h-11 px-1 bg-slate-200/50">
+                            <TabsTrigger value="my-events" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md">
+                                My Events
+                            </TabsTrigger>
+                            <TabsTrigger value="discover" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-medium text-primary data-[state=active]:text-primary focus:text-primary">
+                                Discover
+                            </TabsTrigger>
+                        </TabsList>
 
-                {createdEvents.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-lg border border-dashed border-slate-300">
-                        <div className="mx-auto h-12 w-12 text-slate-400">
-                            <Calendar className="h-12 w-12" />
-                        </div>
-                        <h3 className="mt-2 text-sm font-semibold text-slate-900">No upcoming events</h3>
-                        <p className="mt-1 text-sm text-slate-500">Get started by creating a new event.</p>
-                        <div className="mt-6">
-                            <Button asChild id="new-event-btn-empty">
-                                <Link href="/events/create">
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    New Event
-                                </Link>
-                            </Button>
-                        </div>
+                        <Button asChild className="shrink-0 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow mt-1" id="new-event-btn">
+                            <Link href="/events/create">
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Event
+                            </Link>
+                        </Button>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {createdEvents.map((event: any) => (
-                            <EventCard key={event.id} event={event} />
-                        ))}
-                    </div>
-                )}
 
-                {invitedEvents.length > 0 && (
-                    <div className="mt-16">
-                        <div className="flex items-start justify-between mb-8 gap-4 border-t pt-8">
-                            <div className="pr-4 sm:pr-0 max-w-[75%]">
-                                <h2 className="text-2xl font-bold tracking-tight text-slate-900">Invitations</h2>
-                                <p className="text-slate-500 mt-1">Events you are attending or invited to.</p>
+                    <TabsContent value="my-events" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                        {createdEvents.length === 0 ? (
+                            <div className="text-center py-16 bg-white rounded-lg border border-dashed border-slate-300">
+                                <div className="mx-auto h-12 w-12 text-slate-400">
+                                    <Calendar className="h-12 w-12" />
+                                </div>
+                                <h3 className="mt-2 text-sm font-semibold text-slate-900">No upcoming events</h3>
+                                <p className="mt-1 text-sm text-slate-500">Get started by creating a new event.</p>
+                                <div className="mt-6">
+                                    <Button asChild id="new-event-btn-empty">
+                                        <Link href="/events/create">
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            New Event
+                                        </Link>
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {invitedEvents.map((event: any) => (
-                                <EventCard key={event.id} event={event} />
-                            ))}
-                        </div>
-                    </div>
-                )}
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {createdEvents.map((event: any) => (
+                                    <EventCard key={event.id} event={event} />
+                                ))}
+                            </div>
+                        )}
+
+                        {invitedEvents.length > 0 && (
+                            <div className="mt-16">
+                                <div className="flex items-start justify-between mb-8 gap-4 border-t pt-8">
+                                    <div className="pr-4 sm:pr-0 max-w-[75%]">
+                                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Invitations</h2>
+                                        <p className="text-slate-500 mt-1">Events you are attending or invited to.</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {invitedEvents.map((event: any) => (
+                                        <EventCard key={event.id} event={event} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="discover" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                        <EventScanner />
+                    </TabsContent>
+                </Tabs>
             </main>
         </div>
     );
