@@ -9,6 +9,7 @@ import usePlacesAutocomplete, {
     getGeocode,
     getLatLng,
 } from "use-places-autocomplete";
+import { useLoadScript } from "@react-google-maps/api";
 
 // Dynamically import the map component to avoid SSR issues
 const GoogleMapUI = dynamic(
@@ -25,6 +26,11 @@ export default function LocationPicker({
     onLocationSelect: (address: string, lat: number, lng: number) => void;
 }) {
     const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
+
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
+        libraries: ["places"],
+    });
 
     const {
         ready,
@@ -54,6 +60,9 @@ export default function LocationPicker({
         }
     };
 
+    if (loadError) return <div className="h-full w-full bg-red-50 text-red-500 font-medium flex items-center justify-center p-4 rounded-md">Error loading Google Maps</div>;
+    if (!isLoaded) return <div className="h-full w-full bg-secondary animate-pulse flex items-center justify-center text-muted-foreground p-4 rounded-md">Loading Map Engine...</div>;
+
     return (
         <div className="space-y-4 relative z-50">
             <div className="relative z-50">
@@ -63,7 +72,7 @@ export default function LocationPicker({
                         onChange={(e) => setValue(e.target.value)}
                         placeholder="Search for a venue (e.g. London)..."
                         className="pl-10"
-                        disabled={!ready}
+                        disabled={!isLoaded || !ready}
                     />
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
