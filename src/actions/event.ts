@@ -247,6 +247,23 @@ export const deleteEvent = async (eventId: string) => {
             });
         }
 
+        // 2.5 Purge all attached Vercel Blob media items to free up cloud storage
+        const mediaMessages = await db.message.findMany({
+            where: { eventId, mediaUrl: { not: null } },
+            select: { mediaUrl: true }
+        });
+
+        const mediaUrls = mediaMessages.map((m: any) => m.mediaUrl as string);
+        if (mediaUrls.length > 0) {
+            try {
+                const { del } = await import('@vercel/blob');
+                await del(mediaUrls);
+                console.log(`Purged ${mediaUrls.length} media blobs for deleted event ${eventId}`);
+            } catch (err) {
+                console.error("Failed to delete vercel blobs:", err);
+            }
+        }
+
         // 3. Atomically create Tombstone and drop the Event
         await db.$transaction([
             db.deletedEvent.create({

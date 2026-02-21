@@ -16,7 +16,7 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
 
     // Parallel execution of all our API scrapers
     const results = await Promise.allSettled([
-        fetchEventfindaEvents(params),
+        Promise.resolve([]), // DISABLED: fetchEventfindaEvents(params), waiting for API KEY
         fetchGoogleEvents(params),
     ]);
 
