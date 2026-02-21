@@ -60,7 +60,8 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                 const toastId = toast.loading("Preparing file for camera roll...");
                 const response = await fetch(mediaUrl);
                 const blob = await response.blob();
-                const filename = mediaUrl.split('/').pop() || 'media-download';
+                const extension = mediaUrl.split('.').pop() || 'jpg';
+                const filename = `EventHub-Media.${extension}`;
                 const file = new File([blob], filename, { type: blob.type });
 
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -94,23 +95,56 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
         if (selectedIds.size === 0) return;
 
         setIsDownloading(true);
-        const toastId = toast.loading(`Preparing to download ${selectedIds.size} files...`);
-        let successCount = 0;
+        const toastId = toast.loading(`Preparing ${selectedIds.size} files...`);
 
         try {
-            for (const id of selectedIds) {
-                const item = initialMedia.find(m => m.id === id);
-                if (item?.mediaUrl) {
-                    await handleNativeDownload(item.mediaUrl);
-                    // Small delay to prevent browser throttling on batch fallback downloads
-                    await new Promise(resolve => setTimeout(resolve, 800));
+            const filesToShare: File[] = [];
+
+            // 1. Fetch all selected files into an array concurrently
+            await Promise.all(
+                Array.from(selectedIds).map(async (id) => {
+                    const item = initialMedia.find(m => m.id === id);
+                    if (item?.mediaUrl) {
+                        const response = await fetch(item.mediaUrl);
+                        const blob = await response.blob();
+                        const extension = item.mediaUrl.split('.').pop() || (item.mediaType === 'VIDEO' ? 'mp4' : 'jpg');
+                        const filename = `EventHub-${id.slice(-6)}.${extension}`;
+                        filesToShare.push(new File([blob], filename, { type: blob.type }));
+                    }
+                })
+            );
+
+            // 2. Try to natively share the entire batch at once
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: filesToShare })) {
+                toast.dismiss(toastId);
+                await navigator.share({
+                    files: filesToShare,
+                    title: `Save ${filesToShare.length} Media Files`,
+                });
+            } else {
+                // 3. Fallback: Loop individual anchor downloads for desktop
+                let successCount = 0;
+                for (const file of filesToShare) {
+                    const url = URL.createObjectURL(file);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = file.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    await new Promise(r => setTimeout(r, 600)); // Rate limit desktop downloads
                     successCount++;
                 }
+                toast.success(`Downloaded ${successCount} files`, { id: toastId });
             }
-            toast.success(`Downloaded ${successCount} files`, { id: toastId });
         } catch (error) {
             console.error("Batch download error:", error);
-            toast.error("Some downloads failed", { id: toastId });
+            if ((error as any).name !== 'AbortError') {
+                toast.error("Browser blocked Native Saving. Try long-pressing the images to save individually.", { id: toastId, duration: 5000 });
+            } else {
+                toast.dismiss(toastId);
+            }
         } finally {
             setIsDownloading(false);
             setIsSelectionMode(false);
