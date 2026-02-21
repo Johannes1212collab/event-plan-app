@@ -127,7 +127,6 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: Scan
 
     const url = new URL("https://serpapi.com/search.json");
     url.searchParams.append("engine", "google_events");
-    url.searchParams.append("q", `events near ${address}`);
     url.searchParams.append("hl", "en");
     url.searchParams.append("gl", "nz");
     url.searchParams.append("api_key", API_KEY);
@@ -140,24 +139,33 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: Scan
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Calculate difference in days
 
     let dateChip = "date:this_month"; // Default fallback
+    let useMonthQuery = false;
 
     if (diffDays <= 0) {
         dateChip = "date:today";
     } else if (diffDays === 1) {
         dateChip = "date:tomorrow";
     } else if (diffDays <= 7) {
-        // We'll just call anything within a week "this_week"
         dateChip = "date:this_week";
     } else if (diffDays <= 14) {
         dateChip = "date:next_week";
     } else if (diffDays <= 30) {
-        // If it's further out but still essentially within a month
         dateChip = "date:this_month";
     } else {
-        dateChip = "date:next_month";
+        // If the date is far out, htichips' 10-item pagination will fail to reach it.
+        // We bypass the chip system and use Google's natural language parser.
+        useMonthQuery = true;
     }
 
-    url.searchParams.append("htichips", dateChip);
+    let searchQuery = `events near ${address}`;
+    if (useMonthQuery) {
+        const monthYear = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(startObj);
+        searchQuery = `${searchQuery} in ${monthYear}`;
+    } else {
+        url.searchParams.append("htichips", dateChip);
+    }
+
+    url.searchParams.append("q", searchQuery);
 
     try {
         const response = await fetch(url.toString(), {
