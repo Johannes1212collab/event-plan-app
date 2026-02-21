@@ -97,21 +97,22 @@ export function InstallPWAButton() {
     return (
         <button
             onClick={handleInstallClick}
-            className="flex items-center gap-x-2 p-1 rounded-md hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 group relative"
+            className="flex items-center gap-x-2 p-1.5 -ml-1.5 rounded-md hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 group text-left"
             title="Install EventHub App"
         >
-            <div className="h-8 w-8 bg-black rounded-lg text-white flex items-center justify-center font-bold">
+            <div className="h-8 w-8 bg-black rounded-lg text-white flex items-center justify-center font-bold shrink-0">
                 EH
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 hidden sm:block">
-                EventHub
-            </h1>
-
-            {(isInstallable || isIOS || isAndroid) && (
-                <div className="absolute -right-2 -top-2 bg-blue-600 text-white rounded-full p-1 shadow-sm sm:static sm:bg-transparent sm:text-blue-600 sm:p-0 sm:shadow-none sm:ml-2 sm:opacity-0 sm:-translate-y-1 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
-                    <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                </div>
-            )}
+            <div className="flex flex-col justify-center">
+                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 hidden sm:block leading-none">
+                    EventHub
+                </h1>
+                {(isInstallable || isIOS || isAndroid) && (
+                    <span className="text-[11px] sm:text-xs font-semibold text-blue-600 flex items-center gap-x-1 whitespace-nowrap mt-0.5 group-hover:text-blue-700 transition-colors">
+                        <Download className="h-3 w-3" /> Install EventHub now
+                    </span>
+                )}
+            </div>
         </button>
     );
 }
