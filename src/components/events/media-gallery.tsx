@@ -48,6 +48,48 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
         }
     };
 
+    const handleNativeDownload = async (mediaUrl: string, e?: React.MouseEvent) => {
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        try {
+            // Check if Native Share Sheet is supported and we're likely on a mobile device
+            if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+                const toastId = toast.loading("Preparing file for camera roll...");
+                const response = await fetch(mediaUrl);
+                const blob = await response.blob();
+                const filename = mediaUrl.split('/').pop() || 'media-download';
+                const file = new File([blob], filename, { type: blob.type });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    toast.dismiss(toastId);
+                    await navigator.share({
+                        files: [file],
+                        title: 'Save to Camera Roll',
+                    });
+                    return; // Successfully handed off to OS
+                }
+                toast.dismiss(toastId);
+            }
+
+            // Fallback for Desktop browsers or unsupported Mobile browsers
+            const link = document.createElement('a');
+            link.href = `/api/download?url=${encodeURIComponent(mediaUrl)}`;
+            link.download = '';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Download handling error:", error);
+            // Ignore AbortError when user simply cancels the share sheet
+            if ((error as any).name !== 'AbortError') {
+                toast.error("Could not save media.");
+            }
+        }
+    };
+
     const handleBatchDownload = async () => {
         if (selectedIds.size === 0) return;
 
@@ -59,15 +101,9 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
             for (const id of selectedIds) {
                 const item = initialMedia.find(m => m.id === id);
                 if (item?.mediaUrl) {
-                    const link = document.createElement('a');
-                    link.href = `/api/download?url=${encodeURIComponent(item.mediaUrl)}`;
-                    link.download = ''; // Browser handles filename from header
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    // Small delay to prevent browser throttling
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await handleNativeDownload(item.mediaUrl);
+                    // Small delay to prevent browser throttling on batch fallback downloads
+                    await new Promise(resolve => setTimeout(resolve, 800));
                     successCount++;
                 }
             }
@@ -156,6 +192,8 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                                     <video
                                         src={item.mediaUrl!}
                                         className="w-full h-full object-cover"
+                                        preload="metadata"
+                                        playsInline
                                     />
                                 )}
 
@@ -182,14 +220,10 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                                             className="w-full h-8 text-xs bg-white/90 hover:bg-white"
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <a
-                                                href={`/api/download?url=${encodeURIComponent(item.mediaUrl!)}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
+                                            <span className="flex items-center justify-center w-full" onClick={(e) => handleNativeDownload(item.mediaUrl!, e)}>
                                                 <Download className="h-3 w-3 mr-1" />
                                                 Download
-                                            </a>
+                                            </span>
                                         </Button>
                                     </div>
                                 )}

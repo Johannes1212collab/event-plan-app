@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { sendMessage, getMessages } from "@/actions/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, Loader2, Paperclip, Check, CheckCheck } from "lucide-react";
+import { Send, Image as ImageIcon, Loader2, Paperclip, Check, CheckCheck, Download } from "lucide-react";
 import Image from "next/image";
 
 interface Message {
@@ -97,6 +97,44 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         setTimeout(() => {
             inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
+    };
+
+    const handleNativeDownload = async (mediaUrl: string) => {
+        try {
+            if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+                // Import toast dynamically here as well since it's used inside the component body
+                const { toast } = await import('sonner');
+                const toastId = toast.loading("Preparing file for camera roll...");
+                const response = await fetch(mediaUrl);
+                const blob = await response.blob();
+                const filename = mediaUrl.split('/').pop() || 'media-download';
+                const file = new File([blob], filename, { type: blob.type });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    toast.dismiss(toastId);
+                    await navigator.share({
+                        files: [file],
+                        title: 'Save to Camera Roll',
+                    });
+                    return;
+                }
+                toast.dismiss(toastId);
+            }
+
+            // Fallback for Desktop/unsupported
+            const link = document.createElement('a');
+            link.href = `/api/download?url=${encodeURIComponent(mediaUrl)}`;
+            link.download = '';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Download handling error:", error);
+            if ((error as any).name !== 'AbortError') {
+                const { toast } = await import('sonner');
+                toast.error("Could not save media.");
+            }
+        }
     };
 
     const onSubmit = async (e: React.FormEvent) => {
@@ -242,11 +280,23 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                             <div className={`max-w-[70%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-card border text-card-foreground shadow-sm"}`}>
                                 {!isMe && <p className="text-xs font-bold mb-1 opacity-70">{msg.sender.name}</p>}
                                 {msg.mediaUrl && (
-                                    <div className="mb-2 rounded overflow-hidden">
+                                    <div
+                                        className="mb-2 rounded overflow-hidden cursor-pointer relative group"
+                                        onClick={() => handleNativeDownload(msg.mediaUrl!)}
+                                    >
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
+                                            <Download className="text-white h-6 w-6 drop-shadow-md" />
+                                        </div>
                                         {msg.mediaType === "IMAGE" ? (
                                             <img src={msg.mediaUrl} alt="Shared media" className="max-w-full h-auto object-cover" />
                                         ) : (
-                                            <video src={msg.mediaUrl} controls className="max-w-full h-auto" />
+                                            <video
+                                                src={msg.mediaUrl}
+                                                controls
+                                                className="max-w-full h-auto"
+                                                preload="metadata"
+                                                playsInline
+                                            />
                                         )}
                                     </div>
                                 )}
