@@ -69,7 +69,7 @@ export default function LocationPicker({
 
     return (
         <div className="space-y-4 relative z-50">
-            <div className="relative">
+            <div className="relative z-50">
                 <div className="relative">
                     <Input
                         value={query}
@@ -95,7 +95,7 @@ export default function LocationPicker({
                 )}
             </div>
 
-            <div className="h-[200px] w-full rounded-md overflow-hidden border bg-secondary relative">
+            <div className="h-[200px] w-full rounded-md overflow-hidden border bg-secondary relative z-0">
                 <LeafletMap
                     center={selectedLocation || [51.505, -0.09]}
                     markerPosition={selectedLocation || undefined}
