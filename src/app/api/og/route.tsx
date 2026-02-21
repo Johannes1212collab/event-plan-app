@@ -4,8 +4,8 @@ export const runtime = 'nodejs'
 
 export const alt = 'EventHub Event'
 export const size = {
-    width: 1200,
-    height: 630,
+    width: 600,
+    height: 315,
 }
 
 export async function GET(request: Request) {
@@ -24,27 +24,27 @@ export async function GET(request: Request) {
                     height: '100%',
                     background: 'white',
                     color: 'black',
-                    padding: '60px',
+                    padding: '30px',
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '30px', marginBottom: '50px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             background: 'black',
                             color: 'white',
-                            borderRadius: '24px',
-                            width: '120px',
-                            height: '120px',
-                            fontSize: '56px',
+                            borderRadius: '12px',
+                            width: '60px',
+                            height: '60px',
+                            fontSize: '28px',
                             fontWeight: 'bold',
                         }}>
                             EH
                         </div>
-                        <div style={{ fontSize: 80, fontWeight: 'bold' }}>EventHub</div>
+                        <div style={{ fontSize: 40, fontWeight: 'bold' }}>EventHub</div>
                     </div>
 
-                    <div style={{ fontSize: 48, color: '#64748b' }}>
+                    <div style={{ fontSize: 24, color: '#64748b' }}>
                         Plan Events. Invite Friends. Share Memories.
                     </div>
                 </div>
@@ -130,35 +130,35 @@ export async function GET(request: Request) {
                 height: '100%',
                 background: 'white',
                 color: 'black',
-                padding: '60px',
+                padding: '30px',
                 justifyContent: 'space-between',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: 'black',
                         color: 'white',
-                        borderRadius: '12px',
-                        width: '60px',
-                        height: '60px',
-                        fontSize: '32px',
+                        borderRadius: '6px',
+                        width: '30px',
+                        height: '30px',
+                        fontSize: '16px',
                         fontWeight: 'bold',
-                        marginRight: '20px'
+                        marginRight: '10px'
                     }}>
                         EH
                     </div>
-                    <div style={{ fontSize: 32, fontWeight: 'bold' }}>EventHub</div>
+                    <div style={{ fontSize: 16, fontWeight: 'bold' }}>EventHub</div>
                 </div>
 
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '20px'
+                    gap: '10px'
                 }}>
                     <div style={{
-                        fontSize: 72,
+                        fontSize: 36,
                         fontWeight: 'bold',
                         lineHeight: 1.1,
                     }}>
@@ -169,10 +169,10 @@ export async function GET(request: Request) {
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px',
+                    gap: '6px',
                 }}>
-                    <div style={{ fontSize: 36, fontWeight: 'bold', color: '#333' }}>{`${event.isFullDay ? dateStr : `${dateStr} at ${timeStr}`}`}</div>
-                    <div style={{ fontSize: 28, color: '#666' }}>{`Hosted by ${hostName}`}</div>
+                    <div style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{`${event.isFullDay ? dateStr : `${dateStr} at ${timeStr}`}`}</div>
+                    <div style={{ fontSize: 14, color: '#666' }}>{`Hosted by ${hostName}`}</div>
                 </div>
             </div>
         ),
