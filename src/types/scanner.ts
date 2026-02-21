@@ -1,6 +1,6 @@
 export interface ScannedEvent {
     id: string;             // Unique ID from the source (e.g., ticketmaster_123)
-    source: "Eventfinda" | "Ticketmaster";
+    source: "Eventfinda" | "Google Events";
     title: string;          // Name of the event
     description: string;    // Short summary/description
     url: string;            // Direct link to buy tickets or view details

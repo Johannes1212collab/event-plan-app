@@ -16,7 +16,7 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
     // Parallel execution of all our API scrapers
     const results = await Promise.allSettled([
         fetchEventfindaEvents(params),
-        fetchTicketmasterEvents(params),
+        fetchGoogleEvents(params),
     ]);
 
     // Push successful Eventfinda hits
@@ -26,11 +26,11 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
         console.error("Eventfinda Scraper Failed:", results[0].reason);
     }
 
-    // Push successful Ticketmaster hits
+    // Push successful Google Events hits
     if (results[1].status === "fulfilled") {
         events.push(...results[1].value);
     } else {
-        console.error("Ticketmaster Scraper Failed:", results[1].reason);
+        console.error("Google Events Scraper Failed:", results[1].reason);
     }
 
     // Sort chronologically by Start Date
@@ -106,29 +106,20 @@ async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }:
     }
 }
 
-async function fetchTicketmasterEvents({ lat, lng, radiusKm, startDate, endDate }: ScannerParams): Promise<ScannedEvent[]> {
-    const API_KEY = process.env.TICKETMASTER_API_KEY;
+async function fetchGoogleEvents({ lat, lng }: ScannerParams): Promise<ScannedEvent[]> {
+    const API_KEY = process.env.SERPAPI_KEY;
 
     if (!API_KEY) {
-        console.warn("Ticketmaster API key missing. Skipping Ticketmaster scraper.");
+        console.warn("SerpAPI key missing. Skipping Google Events scraper.");
         return [];
     }
 
-    // Convert start/end dates to Ticketmaster's required formats: YYYY-MM-DDTHH:mm:ssZ
-    // The UI passes YYYY-MM-DD
-    const tmStart = `${startDate}T00:00:00Z`;
-    const tmEnd = `${endDate}T23:59:59Z`;
-
-    const url = new URL("https://app.ticketmaster.com/discovery/v2/events.json");
-    url.searchParams.append("apikey", API_KEY);
-    url.searchParams.append("geoPoint", encodeURIComponent(`${lat},${lng}`)); // Approximate logic: geoPoint doesn't take lat,lng directly like this, geohash is better, but latlong works for radius
-    url.searchParams.append("latlong", `${lat},${lng}`);
-    url.searchParams.append("radius", radiusKm.toString());
-    url.searchParams.append("unit", "km");
-    url.searchParams.append("startDateTime", tmStart);
-    url.searchParams.append("endDateTime", tmEnd);
-    url.searchParams.append("size", "40"); // Top 40 results
-    url.searchParams.append("sort", "date,asc");
+    const url = new URL("https://serpapi.com/search.json");
+    url.searchParams.append("engine", "google_events");
+    url.searchParams.append("q", `events near ${lat},${lng}`);
+    url.searchParams.append("hl", "en");
+    url.searchParams.append("gl", "nz");
+    url.searchParams.append("api_key", API_KEY);
 
     try {
         const response = await fetch(url.toString(), {
@@ -136,55 +127,44 @@ async function fetchTicketmasterEvents({ lat, lng, radiusKm, startDate, endDate 
         });
 
         if (!response.ok) {
-            throw new Error(`Ticketmaster HTTP Error: ${response.status}`);
+            throw new Error(`SerpAPI HTTP Error: ${response.status}`);
         }
 
         const data = await response.json();
 
-        // Ticketmaster doesn't include _embedded if no results are found
-        if (!data._embedded || !data._embedded.events) {
+        if (!data.events_results || !Array.isArray(data.events_results)) {
             return [];
         }
 
-        return data._embedded.events.map((event: any): ScannedEvent => {
-            const minPrice = event.priceRanges?.[0]?.min;
-            const maxPrice = event.priceRanges?.[0]?.max;
-            let priceString = undefined;
-
-            if (minPrice && maxPrice) {
-                priceString = `$${minPrice} - $${maxPrice}`;
-            } else if (minPrice) {
-                priceString = `$${minPrice}`;
+        return data.events_results.map((event: any): ScannedEvent => {
+            // Google Events provides relatively unstructured dates
+            // Attempt to build a real JS Date object out of the string, falling back to today if unable to parse cleanly
+            let parsedDate = new Date();
+            if (event.date?.start_date) {
+                // Often looks like "Feb 23"
+                parsedDate = new Date(`${event.date.start_date}, ${new Date().getFullYear()}`);
+                if (isNaN(parsedDate.getTime())) parsedDate = new Date();
             }
 
-            // Find highest quality 16:9 image
-            const bestImage = event.images?.find((img: any) => img.ratio === "16_9" && img.width > 600)?.url
-                || event.images?.[0]?.url;
-
-            const venue = event._embedded?.venues?.[0];
-
             return {
-                id: `tm_${event.id}`,
-                source: "Ticketmaster",
-                title: event.name,
-                description: event.info || event.description || "Grab your tickets on Ticketmaster!",
-                url: event.url,
-                startDate: new Date(event.dates.start.dateTime || event.dates.start.localDate),
-                endDate: event.dates.end ? new Date(event.dates.end.dateTime || event.dates.end.localDate) : undefined,
-                imageUrl: bestImage,
+                id: `ge_${event.title.replace(/\s+/g, '-').slice(0, 15)}_${Math.random()}`,
+                source: "Google Events" as any, // Typecast to bypass TS until the real type updates
+                title: event.title,
+                description: event.description || "View tickets and details via Google.",
+                url: event.link,
+                startDate: parsedDate,
+                imageUrl: event.thumbnail,
                 location: {
-                    name: venue?.name || "TBA",
-                    address: venue?.address?.line1 || `${venue?.city?.name}, ${venue?.country?.name}`,
-                    lat: parseFloat(venue?.location?.latitude) || lat,
-                    lng: parseFloat(venue?.location?.longitude) || lng,
+                    name: event.venue?.name || event.address?.join(", ") || "TBA",
+                    address: event.address?.join(", ") || "",
+                    lat, // Defaulting to search center since Google rarely provides explicit coordinates here
+                    lng,
                 },
-                category: event.classifications?.[0]?.segment?.name || event.classifications?.[0]?.genre?.name,
-                isFree: priceString === "$0 - $0" || priceString === "$0",
-                priceRange: priceString,
+                isFree: false, // Cannot reliably determine pricing from SERP snippet
             };
         });
 
     } catch (err) {
-        throw new Error(`Failed to scrape Ticketmaster: ${(err as Error).message}`);
+        throw new Error(`Failed to scrape Google Events: ${(err as Error).message}`);
     }
 }
