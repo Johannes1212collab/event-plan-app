@@ -15,8 +15,10 @@ import { NotificationsManager } from "@/components/notifications-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventScanner from "@/components/dashboard/event-scanner";
 
-const DashboardPage = async () => {
+const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: string }> }) => {
     const session = await auth();
+    const { tab } = await searchParams;
+    const defaultTab = tab === "discover" ? "discover" : "my-events";
 
     if (!session?.user?.id) {
         redirect("/login");
@@ -59,14 +61,18 @@ const DashboardPage = async () => {
             </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Tabs defaultValue="my-events" className="w-full">
+                <Tabs defaultValue={defaultTab} className="w-full">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <TabsList className="h-11 px-1 bg-slate-200/50">
-                            <TabsTrigger value="my-events" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md">
-                                My Events
+                            <TabsTrigger value="my-events" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md asChild">
+                                <Link href="/dashboard?tab=my-events" className="block w-full h-full pt-1.5 focus:outline-none">
+                                    My Events
+                                </Link>
                             </TabsTrigger>
-                            <TabsTrigger value="discover" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-medium text-primary data-[state=active]:text-primary focus:text-primary">
-                                Discover
+                            <TabsTrigger value="discover" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-medium text-primary data-[state=active]:text-primary focus:text-primary asChild">
+                                <Link href="/dashboard?tab=discover" className="block w-full h-full pt-1.5 focus:outline-none">
+                                    Discover
+                                </Link>
                             </TabsTrigger>
                         </TabsList>
 
