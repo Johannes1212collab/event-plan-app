@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
+  // Explicitly tell Next.js to allow custom Webpack configs underneath Turbopack
+  turbopack: {},
   images: {
     remotePatterns: [
       {
