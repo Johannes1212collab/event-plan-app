@@ -9,13 +9,13 @@ export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
     return (
         <div className="flex flex-col md:flex-row border rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-card">
             {/* Image Section */}
-            <div className="relative w-full md:w-48 h-48 md:h-auto bg-muted shrink-0">
+            <div className="relative w-full md:w-48 h-48 md:h-auto bg-black/5 shrink-0">
                 {event.imageUrl ? (
                     <Image
                         src={event.imageUrl}
                         alt={event.title}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-muted-foreground bg-secondary/50">

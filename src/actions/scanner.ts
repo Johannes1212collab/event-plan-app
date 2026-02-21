@@ -154,7 +154,7 @@ async function fetchGoogleEvents({ lat, lng, address }: ScannerParams): Promise<
                 description: event.description || "View tickets and details via Google.",
                 url: event.link,
                 startDate: parsedDate,
-                imageUrl: event.thumbnail,
+                imageUrl: event.image || event.thumbnail,
                 location: {
                     name: event.venue?.name || event.address?.join(", ") || "TBA",
                     address: event.address?.join(", ") || "",
