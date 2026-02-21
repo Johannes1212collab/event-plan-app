@@ -38,18 +38,33 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Auto-scroll to chat if the user arrived via a Push Notification (url ends in #chat)
-    useEffect(() => {
-        if (typeof window !== "undefined" && window.location.hash === "#chat") {
-            setTimeout(() => {
-                document.getElementById('chat')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 500); // Small delay to let Next.js finish hydrating the DOM
-        }
-    }, []);
-
     const allMessages = [...realMessages, ...pendingMessages].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
+
+    // Auto-scroll to specific message if arriving from Push Notification URL hash
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.location.hash) {
+            const hash = window.location.hash;
+            if (hash.startsWith("#msg-") || hash === "#chat") {
+                setTimeout(() => {
+                    const targetId = hash.startsWith("#msg-") ? hash.replace('#', '') : 'chat';
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // Add a temporary highlight effect if it's a specific message
+                        if (targetId.startsWith("msg-")) {
+                            targetElement.classList.add("ring-2", "ring-primary", "ring-offset-2", "transition-all", "duration-1000");
+                            setTimeout(() => {
+                                targetElement.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+                            }, 3000);
+                        }
+                    }
+                }, 500); // Small delay to let Next.js hydrate and fetch initial messages
+            }
+        }
+    }, [allMessages.length]); // Re-run if messages array updates and the hash is still active
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -223,7 +238,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 {allMessages.map((msg) => {
                     const isMe = msg.senderId === currentUserId;
                     return (
-                        <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                        <div id={`msg-${msg.id}`} key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} scroll-mt-20 rounded-lg`}>
                             <div className={`max-w-[70%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-card border text-card-foreground shadow-sm"}`}>
                                 {!isMe && <p className="text-xs font-bold mb-1 opacity-70">{msg.sender.name}</p>}
                                 {msg.mediaUrl && (

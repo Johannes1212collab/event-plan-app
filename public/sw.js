@@ -32,7 +32,20 @@ self.addEventListener('push', function (event) {
             },
         };
 
-        event.waitUntil(self.registration.showNotification(data.title || "EventHub", options));
+        event.waitUntil(
+            self.registration.getNotifications().then(notifications => {
+                if (notifications.length >= 5) {
+                    // Sort by timestamp (oldest first)
+                    notifications.sort((a, b) => (a.data?.dateOfArrival || 0) - (b.data?.dateOfArrival || 0));
+                    // Close enough to get under the limit (leave exactly 4 before adding the 5th)
+                    const amountToClose = notifications.length - 4;
+                    for (let i = 0; i < amountToClose; i++) {
+                        notifications[i].close();
+                    }
+                }
+                return self.registration.showNotification(data.title || "EventHub", options);
+            })
+        );
     }
 });
 
