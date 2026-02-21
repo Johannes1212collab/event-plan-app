@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.eventhub.community"),
+  manifest: "/manifest.json",
   title: {
     default: "EventHub",
     template: "%s | EventHub",
@@ -53,6 +54,10 @@ export const metadata: Metadata = {
   other: {
     "fb:app_id": "123456789012345",
   }
+};
+
+export const viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({

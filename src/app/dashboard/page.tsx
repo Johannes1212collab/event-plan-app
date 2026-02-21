@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { ShareSiteButton } from "@/components/share-site-button";
+import { InstallPWAButton } from "@/components/install-pwa-button";
 
 const DashboardPage = async () => {
     const session = await auth();
@@ -31,10 +32,7 @@ const DashboardPage = async () => {
             <OnboardingTour hasSeenOnboarding={user?.hasSeenOnboarding ?? false} page="dashboard" />
             <header className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-x-2 hover:opacity-80 transition-opacity">
-                        <div className="h-8 w-8 bg-black rounded-lg text-white flex items-center justify-center font-bold">EH</div>
-                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">EventHub</h1>
-                    </Link>
+                    <InstallPWAButton />
 
                     <div className="flex items-center gap-x-2 sm:gap-x-4">
                         <ShareSiteButton />
