@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, startTransition } from "react";
 import { sendMessage, getMessages } from "@/actions/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,47 +95,12 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         }, 300);
     };
 
-    const handleSendMessage = async (mediaUrl?: string, mediaType?: string) => {
-        if (!content && !mediaUrl) return;
-
-        const optimisticMessage: Message = {
-            id: Math.random().toString(),
-            content: content,
-            mediaUrl: mediaUrl || null,
-            mediaType: mediaType || null,
-            senderId: currentUserId,
-            createdAt: new Date(),
-            sender: {
-                name: "You", // Better if we pass user name in props
-                image: null,
-                id: currentUserId
-            }
-        };
-
-        addOptimisticMessage(optimisticMessage);
-        setContent("");
-
-        await sendMessage({
-            content, // capture current content before clearing? No, already cleared locally but kept in closure? 
-            // Better pass directly.
-            // Actually content checks closure value which might be stale if typed fast?
-            // Safe to pass `content` from closure as it's state at call time? 
-            // Wait, I cleared content after calling addOptimisticMessage.
-            // I should capture it.
-            mediaUrl,
-            mediaType,
-            eventId
-        });
-        // Note: sendMessage reads `content` from arg I pass, not state if I pass literal.
-        // Wait, function def needs arguments. 
-    };
-
-    const onSubmit = async (e: React.FormEvent) => {
+    const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const msg = content;
+        if (!msg.trim()) return;
         setContent(""); // clear immediately
 
-        // Add optimistic
         const optimisticMessage: Message = {
             id: Math.random().toString(),
             content: msg,
@@ -149,9 +114,11 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 id: currentUserId
             }
         };
-        addOptimisticMessage(optimisticMessage);
 
-        await sendMessage({ content: msg, eventId });
+        startTransition(async () => {
+            addOptimisticMessage(optimisticMessage);
+            await sendMessage({ content: msg, eventId });
+        });
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,12 +177,14 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                             id: currentUserId
                         }
                     };
-                    addOptimisticMessage(optimisticMessage);
 
-                    await sendMessage({
-                        mediaUrl: newBlob.url,
-                        mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
-                        eventId
+                    startTransition(async () => {
+                        addOptimisticMessage(optimisticMessage);
+                        await sendMessage({
+                            mediaUrl: newBlob.url,
+                            mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                            eventId
+                        });
                     });
 
                     toast.success(`Uploaded ${file.name}`, { id: toastId });
