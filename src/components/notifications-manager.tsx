@@ -68,10 +68,16 @@ export function NotificationsManager() {
 
             // The next-pwa plugin automatically registers the combined service worker on page load.
             // We just need to reliably grab the active one, or wait for it.
-            let swRegistration = await navigator.serviceWorker.getRegistration();
+            let swRegistration = await Promise.race([
+                navigator.serviceWorker.getRegistration(),
+                new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout getting SW Registration")), 5000))
+            ]);
 
             if (!swRegistration) {
-                swRegistration = await navigator.serviceWorker.ready;
+                swRegistration = await Promise.race([
+                    navigator.serviceWorker.ready,
+                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for SW Ready")), 5000))
+                ]);
             }
 
             if (!swRegistration) {
