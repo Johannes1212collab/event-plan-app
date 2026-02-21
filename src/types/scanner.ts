@@ -6,6 +6,7 @@ export interface ScannedEvent {
     url: string;            // Direct link to buy tickets or view details
     startDate: Date;        // Starting time
     endDate?: Date;         // Ending time (optional)
+    displayTime?: string;
     imageUrl?: string;      // Hero image for the card
     location: {
         name: string;       // Venue Name (e.g., "Spark Arena")

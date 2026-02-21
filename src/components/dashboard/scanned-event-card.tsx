@@ -38,7 +38,7 @@ export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
                             {event.title}
                         </h3>
                         <p className="text-sm font-medium text-primary mb-3">
-                            {format(event.startDate, "EEEE, MMM d, yyyy \u2022 h:mm a")}
+                            {event.displayTime || format(event.startDate, "EEEE, MMM d, yyyy \u2022 h:mm a")}
                         </p>
                     </div>
                     {event.isFree && (

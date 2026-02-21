@@ -34,8 +34,18 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
         console.error("Google Events Scraper Failed:", results[1].reason);
     }
 
+    // Strict Temporal Filtering (Google Events 'htichips' is imprecise and can return the entire month)
+    const requestStart = new Date(params.startDate);
+    const requestEnd = new Date(params.endDate);
+    requestStart.setHours(0, 0, 0, 0);       // Include full start day
+    requestEnd.setHours(23, 59, 59, 999);    // Include full end day
+
+    const filteredEvents = events.filter(e => {
+        return e.startDate >= requestStart && e.startDate <= requestEnd;
+    });
+
     // Sort chronologically by Start Date
-    return events.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    return filteredEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 }
 
 async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }: ScannerParams): Promise<ScannedEvent[]> {
@@ -181,6 +191,7 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: Scan
                 description: event.description || "View tickets and details via Google.",
                 url: event.link,
                 startDate: parsedDate,
+                displayTime: event.date?.when,
                 imageUrl: event.image || event.thumbnail,
                 location: {
                     name: event.venue?.name || event.address?.join(", ") || "TBA",
