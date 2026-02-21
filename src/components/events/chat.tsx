@@ -1,13 +1,12 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useCallback, startTransition } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { sendMessage, getMessages } from "@/actions/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, Loader2, Paperclip } from "lucide-react";
+import { Send, Image as ImageIcon, Loader2, Paperclip, Check, CheckCheck } from "lucide-react";
 import Image from "next/image";
-import { useOptimistic } from "react";
 
 interface Message {
     id: string;
@@ -21,6 +20,7 @@ interface Message {
         image: string | null;
         id: string;
     };
+    pending?: boolean;
 }
 
 interface ChatProps {
@@ -33,20 +33,10 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     const [content, setContent] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const [realMessages, setRealMessages] = useState<Message[]>(initialMessages);
+    const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    // Simple optimistic UI
-    const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-        realMessages,
-        (state, newMessage: Message) => {
-            // Check if optimistic message already exists to avoid duplication locally
-            const exists = state.some(m => m.id === newMessage.id);
-            if (exists) return state;
-            return [...state, newMessage];
-        }
-    );
 
     // Auto-scroll to chat if the user arrived via a Push Notification (url ends in #chat)
     useEffect(() => {
@@ -57,21 +47,20 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         }
     }, []);
 
+    const allMessages = [...realMessages, ...pendingMessages].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
     useEffect(() => {
         if (scrollRef.current) {
-            // Check if we are near the bottom
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-            // 200px threshold allows for tall image incoming messages to still trigger scroll
             const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
 
-            // Only force scroll if user is near bottom or we literally just sent a message quickly
-            // But realistically just doing it indiscriminately is what initial version did. 
-            // We'll scroll to bottom if near bottom.
-            if (isNearBottom || optimisticMessages.length !== realMessages.length) {
+            if (isNearBottom || pendingMessages.length > 0) {
                 scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             }
         }
-    }, [optimisticMessages, realMessages]);
+    }, [allMessages.length, pendingMessages.length]);
 
     // Polling logic
     useEffect(() => {
@@ -95,13 +84,13 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         }, 300);
     };
 
-    const onSubmit = (e: React.FormEvent) => {
+    const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const msg = content;
         if (!msg.trim()) return;
         setContent(""); // clear immediately
 
-        const optimisticMessage: Message = {
+        const pendingMessage: Message = {
             id: Math.random().toString(),
             content: msg,
             mediaUrl: null,
@@ -112,13 +101,23 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 name: "You",
                 image: null,
                 id: currentUserId
-            }
+            },
+            pending: true
         };
 
-        startTransition(async () => {
-            addOptimisticMessage(optimisticMessage);
-            await sendMessage({ content: msg, eventId });
-        });
+        setPendingMessages(prev => [...prev, pendingMessage]);
+
+        try {
+            const res = await sendMessage({ content: msg, eventId });
+
+            // On success, manually inject the official record to prevent any UI flicker before polling catches it
+            if (res?.message) {
+                setRealMessages(prev => [...prev, res.message as Message]);
+            }
+        } finally {
+            // Remove from local pending queue whether it succeeded or failed
+            setPendingMessages(prev => prev.filter(m => m.id !== pendingMessage.id));
+        }
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +163,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     });
 
                     // Send message with media
-                    const optimisticMessage: Message = {
+                    const pendingMessage: Message = {
                         id: Math.random().toString(),
                         content: "",
                         mediaUrl: newBlob.url,
@@ -175,17 +174,26 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                             name: "You",
                             image: null,
                             id: currentUserId
-                        }
+                        },
+                        pending: true
                     };
 
-                    startTransition(async () => {
-                        addOptimisticMessage(optimisticMessage);
-                        await sendMessage({
+                    setPendingMessages(prev => [...prev, pendingMessage]);
+
+                    try {
+                        const res = await sendMessage({
                             mediaUrl: newBlob.url,
                             mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
                             eventId
                         });
-                    });
+
+                        // Inject official database record instantly to stop UI stutter
+                        if (res?.message) {
+                            setRealMessages(prev => [...prev, res.message as Message]);
+                        }
+                    } finally {
+                        setPendingMessages(prev => prev.filter(m => m.id !== pendingMessage.id));
+                    }
 
                     toast.success(`Uploaded ${file.name}`, { id: toastId });
                 } catch (err) {
@@ -207,12 +215,12 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     return (
         <div id="chat" className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-background shadow-sm overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950" ref={scrollRef}>
-                {optimisticMessages.length === 0 && (
+                {allMessages.length === 0 && (
                     <div className="text-center text-muted-foreground mt-10">
                         <p>No messages yet. Start the conversation!</p>
                     </div>
                 )}
-                {optimisticMessages.map((msg) => {
+                {allMessages.map((msg) => {
                     const isMe = msg.senderId === currentUserId;
                     return (
                         <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
@@ -228,9 +236,12 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                                     </div>
                                 )}
                                 {msg.content && <p>{msg.content}</p>}
-                                <p className="text-[10px] mt-1 opacity-70 text-right">
-                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </p>
+                                <div className="text-[10px] mt-1 opacity-70 flex items-center justify-end gap-1">
+                                    <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {isMe && (
+                                        msg.pending ? <Check className="h-3 w-3" /> : <CheckCheck className="h-3 w-3 text-blue-200" />
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );
