@@ -60,6 +60,9 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                                 targetElement.classList.remove("ring-2", "ring-primary", "ring-offset-2");
                             }, 3000);
                         }
+
+                        // Remove the hash from the URL so future message polling doesn't trigger the scroll again
+                        window.history.replaceState(null, '', window.location.pathname + window.location.search);
                     }
                 }, 500); // Small delay to let Next.js hydrate and fetch initial messages
             }
