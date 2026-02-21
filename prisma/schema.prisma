@@ -109,3 +109,8 @@ model PushSubscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model DeletedEvent {
+  id        String   @id
+  deletedAt DateTime @default(now())
+}

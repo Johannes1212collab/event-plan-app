@@ -68,3 +68,55 @@ export async function inviteGuest(eventId: string, email: string) {
         return { error: "Failed to send email. Please check the email address." };
     }
 }
+
+export async function sendEventDeletedEmail(title: string, date: string, location: string | null, participantEmails: string[]) {
+    // Check environment variables
+    if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
+        console.error("Missing EMAIL_SERVER_USER or EMAIL_SERVER_PASSWORD");
+        return { error: "Server email configuration is missing." };
+    }
+
+    if (participantEmails.length === 0) return { success: "No participants to notify." };
+
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_SERVER_USER,
+            pass: process.env.EMAIL_SERVER_PASSWORD,
+        },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: `"EventHub" <${process.env.EMAIL_SERVER_USER}>`,
+            bcc: participantEmails,
+            subject: `Event Cancelled: ${title}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h1 style="color: #000;">EventHub</h1>
+                    </div>
+                    <h2>Event Cancelled</h2>
+                    <p>The host has unfortunately cancelled <strong>${title}</strong>.</p>
+                    <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 5px 0; color: #666; text-decoration: line-through;"><strong>📅 Date:</strong> ${date}</p>
+                        <p style="margin: 5px 0; color: #666; text-decoration: line-through;"><strong>📍 Location:</strong> ${location || "TBD"}</p>
+                    </div>
+                    <p style="font-size: 14px; color: #666;">
+                        You are receiving this email because you were registered as a participant.
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eaeaea; margin: 30px 0;" />
+                    <p style="text-align: center; font-size: 12px; color: #999;">
+                        EventHub - Plan Events. Invite Friends. Share Memories.
+                    </p>
+                </div>
+            `,
+        });
+
+        return { success: "Cancellation emails sent!" };
+    } catch (error) {
+        console.error("Email error:", error);
+        return { error: "Failed to send cancellation emails." };
+    }
+}
+

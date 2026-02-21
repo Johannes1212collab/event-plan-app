@@ -116,7 +116,25 @@ const EventPage = async (props: EventPageProps) => {
     const eventMedia = await getEventMedia(params.id);
 
     if (!event) {
-        return <div>Event not found</div>;
+        const tombstone = await db.deletedEvent.findUnique({ where: { id: params.id } });
+        if (tombstone) {
+            return (
+                <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
+                    <Card className="max-w-md w-full text-center shadow-lg border-red-100">
+                        <CardHeader>
+                            <CardTitle className="text-xl text-red-600">Event Deleted</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-muted-foreground">The creator has unfortunately cancelled and deleted this event.</p>
+                            <Button asChild className="w-full mt-4">
+                                <Link href="/dashboard">Return to Dashboard</Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
+        }
+        return <div className="flex items-center justify-center min-h-screen">Event not found</div>;
     }
 
     // Fetch user to get fresh hasSeenOnboarding status

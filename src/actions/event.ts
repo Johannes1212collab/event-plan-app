@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { sendEventDeletedEmail } from "@/actions/email";
 
 import { unstable_cache } from "next/cache";
 
@@ -214,6 +215,13 @@ export const deleteEvent = async (eventId: string) => {
     try {
         const event = await db.event.findUnique({
             where: { id: eventId },
+            include: {
+                participants: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
         });
 
         if (!event) {
@@ -224,9 +232,30 @@ export const deleteEvent = async (eventId: string) => {
             return { error: "Only the host can delete this event" };
         }
 
-        await db.event.delete({
-            where: { id: eventId },
-        });
+        // 1. Gather participant emails excluding the host
+        const participantEmails = event.participants
+            .filter((p: any) => p.userId !== session.user?.id && p.user.email)
+            .map((p: any) => p.user.email as string);
+
+        // 2. Fire the email broadcast asynchronously
+        if (participantEmails.length > 0) {
+            const dateStr = event.date.toLocaleDateString() + (!event.isFullDay ? ` at ${event.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "");
+
+            // Fire and forget, don't block the actual deletion
+            sendEventDeletedEmail(event.title, dateStr, event.location, participantEmails).catch(err => {
+                console.error("Failed to broadcast deletion emails:", err);
+            });
+        }
+
+        // 3. Atomically create Tombstone and drop the Event
+        await db.$transaction([
+            db.deletedEvent.create({
+                data: { id: eventId }
+            }),
+            db.event.delete({
+                where: { id: eventId },
+            })
+        ]);
 
         return { success: "Event deleted" };
     } catch (error) {
