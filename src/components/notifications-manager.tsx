@@ -114,19 +114,19 @@ export function NotificationsManager() {
         <button
             onClick={isSubscribed ? unsubscribeButtonOnClick : subscribeButtonOnClick}
             className={`flex items-center gap-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${isSubscribed
-                    ? 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
-                    : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 shadow-sm'
+                ? 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
+                : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-700 shadow-sm'
                 }`}
         >
             {isSubscribed ? (
                 <>
                     <BellOff className="h-3.5 w-3.5" />
-                    <span>Disable Alerts</span>
+                    <span className="hidden sm:inline">Disable Alerts</span>
                 </>
             ) : (
                 <>
                     <BellRing className="h-3.5 w-3.5" />
-                    <span>Enable Chat Alerts</span>
+                    <span className="hidden sm:inline">Enable Chat Alerts</span>
                 </>
             )}
         </button>

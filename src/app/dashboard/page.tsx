@@ -38,7 +38,7 @@ const DashboardPage = async () => {
                     <div className="flex items-center gap-x-2 sm:gap-x-4">
                         <NotificationsManager />
                         <ShareSiteButton />
-                        <span className="text-sm font-medium text-slate-700 truncate max-w-[100px] sm:max-w-none">
+                        <span className="hidden sm:block text-sm font-medium text-slate-700 truncate max-w-none">
                             {session.user.name}
                         </span>
                         <form action={async () => {
