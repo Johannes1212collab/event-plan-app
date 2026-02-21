@@ -20,18 +20,13 @@ const GoogleMapUI = dynamic(
     }
 );
 
-export default function LocationPicker({
+function LocationInputMenu({
     onLocationSelect,
+    setSelectedLocation
 }: {
     onLocationSelect: (address: string, lat: number, lng: number) => void;
+    setSelectedLocation: (loc: [number, number]) => void;
 }) {
-    const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
-
-    const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
-        libraries: ["places"],
-    });
-
     const {
         ready,
         value,
@@ -60,37 +55,57 @@ export default function LocationPicker({
         }
     };
 
+    return (
+        <div className="relative z-50">
+            <div className="relative">
+                <Input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder="Search for a venue (e.g. London)..."
+                    className="pl-10"
+                    disabled={!ready}
+                />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+
+            {status === "OK" && (
+                <ul className="absolute z-[100] w-full bg-popover border border-border rounded-md shadow-xl mt-1 max-h-60 overflow-auto">
+                    {data.map(({ place_id, description }) => (
+                        <li
+                            key={place_id}
+                            onClick={() => handleSelect(description)}
+                            className="px-4 py-3 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm text-popover-foreground font-medium border-b border-border last:border-0"
+                        >
+                            {description}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}
+
+export default function LocationPicker({
+    onLocationSelect,
+}: {
+    onLocationSelect: (address: string, lat: number, lng: number) => void;
+}) {
+    const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
+
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
+        libraries: ["places"],
+    });
+
     if (loadError) return <div className="h-full w-full bg-red-50 text-red-500 font-medium flex items-center justify-center p-4 rounded-md">Error loading Google Maps</div>;
-    if (!isLoaded) return <div className="h-full w-full bg-secondary animate-pulse flex items-center justify-center text-muted-foreground p-4 rounded-md">Loading Map Engine...</div>;
+    if (!isLoaded) return <div className="h-[40px] w-full bg-secondary animate-pulse flex items-center justify-center text-muted-foreground p-4 rounded-md">Loading Map Engine...</div>;
 
     return (
         <div className="space-y-4 relative z-50">
-            <div className="relative z-50">
-                <div className="relative">
-                    <Input
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        placeholder="Search for a venue (e.g. London)..."
-                        className="pl-10"
-                        disabled={!isLoaded}
-                    />
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
-
-                {status === "OK" && (
-                    <ul className="absolute z-[100] w-full bg-popover border border-border rounded-md shadow-xl mt-1 max-h-60 overflow-auto">
-                        {data.map(({ place_id, description }) => (
-                            <li
-                                key={place_id}
-                                onClick={() => handleSelect(description)}
-                                className="px-4 py-3 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm text-popover-foreground font-medium border-b border-border last:border-0"
-                            >
-                                {description}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+            <LocationInputMenu
+                onLocationSelect={onLocationSelect}
+                setSelectedLocation={setSelectedLocation}
+            />
 
             <div className="h-[200px] w-full rounded-md overflow-hidden border bg-secondary relative z-0">
                 <GoogleMapUI
