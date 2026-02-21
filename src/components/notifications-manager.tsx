@@ -34,8 +34,9 @@ export function NotificationsManager() {
     }, []);
 
     const checkSubscription = async () => {
-        // Explicitly register our worker first to guarantee it's available
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) return;
+
         const subscription = await registration.pushManager.getSubscription();
         setIsSubscribed(!!subscription);
 
@@ -65,9 +66,17 @@ export function NotificationsManager() {
                 throw new Error('Permission not granted');
             }
 
-            // Attempt to explicitly register and get our specific service worker
-            const swRegistration = await navigator.serviceWorker.register('/sw.js');
-            await swRegistration.update(); // Ensure we have the latest payload parsing logic
+            // The next-pwa plugin automatically registers the combined service worker on page load.
+            // We just need to reliably grab the active one, or wait for it.
+            let swRegistration = await navigator.serviceWorker.getRegistration();
+
+            if (!swRegistration) {
+                swRegistration = await navigator.serviceWorker.ready;
+            }
+
+            if (!swRegistration) {
+                throw new Error("No active Service Worker found. Please refresh the page.");
+            }
 
             const subscription = await swRegistration.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -101,7 +110,9 @@ export function NotificationsManager() {
     const unsubscribeButtonOnClick = async () => {
         setIsLoading(true);
         try {
-            const registration = await navigator.serviceWorker.register('/sw.js');
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (!registration) return;
+
             const subscription = await registration.pushManager.getSubscription();
 
             if (subscription) {
