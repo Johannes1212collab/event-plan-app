@@ -131,40 +131,19 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: Scan
     url.searchParams.append("gl", "nz");
     url.searchParams.append("api_key", API_KEY);
 
-    // Google Events doesn't support strict custom date ranges in their UI/API.
-    // They use 'htichips'. We'll map the UI's 'startDate' to the most appropriate Google chip.
+    // Google Events API limits 'htichips' to the first 10 events.
+    // To bypass this pagination dead-end for future dates, we format the strict requested 
+    // Start Date into a human-readable string and inject it directly into the search query.
+    // Example: "events near Auckland starting March 6, 2026"
+
     const startObj = new Date(startDate);
-    const now = new Date();
-    const diffTime = startObj.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Calculate difference in days
+    const dateFormatted = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    }).format(startObj);
 
-    let dateChip = "date:this_month"; // Default fallback
-    let useMonthQuery = false;
-
-    if (diffDays <= 0) {
-        dateChip = "date:today";
-    } else if (diffDays === 1) {
-        dateChip = "date:tomorrow";
-    } else if (diffDays <= 7) {
-        dateChip = "date:this_week";
-    } else if (diffDays <= 14) {
-        dateChip = "date:next_week";
-    } else if (diffDays <= 30) {
-        dateChip = "date:this_month";
-    } else {
-        // If the date is far out, htichips' 10-item pagination will fail to reach it.
-        // We bypass the chip system and use Google's natural language parser.
-        useMonthQuery = true;
-    }
-
-    let searchQuery = `events near ${address}`;
-    if (useMonthQuery) {
-        const monthYear = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(startObj);
-        searchQuery = `${searchQuery} in ${monthYear}`;
-    } else {
-        url.searchParams.append("htichips", dateChip);
-    }
-
+    const searchQuery = `events near ${address} starting ${dateFormatted}`;
     url.searchParams.append("q", searchQuery);
 
     try {
