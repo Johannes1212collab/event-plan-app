@@ -48,6 +48,15 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
         }
     );
 
+    // Auto-scroll to chat if the user arrived via a Push Notification (url ends in #chat)
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.location.hash === "#chat") {
+            setTimeout(() => {
+                document.getElementById('chat')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 500); // Small delay to let Next.js finish hydrating the DOM
+        }
+    }, []);
+
     useEffect(() => {
         if (scrollRef.current) {
             // Check if we are near the bottom
@@ -227,7 +236,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     };
 
     return (
-        <div className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-background shadow-sm overflow-hidden">
+        <div id="chat" className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-background shadow-sm overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950" ref={scrollRef}>
                 {optimisticMessages.length === 0 && (
                     <div className="text-center text-muted-foreground mt-10">

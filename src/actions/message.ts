@@ -81,7 +81,7 @@ export const sendMessage = async (values: any) => {
                         title: `New message from ${message.sender.name?.split(' ')[0] || 'someone'}`,
                         body: messagePreview,
                         icon: message.sender.image || '/icons/icon-192.png',
-                        url: `/events/${eventId}`,
+                        url: `/events/${eventId}#chat`,
                     });
 
                     await Promise.allSettled(subscriptions.map(async (sub: any) => {
