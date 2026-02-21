@@ -94,7 +94,7 @@ export function NotificationsManager() {
             if (Notification.permission === 'denied') {
                 toast.error("You blocked notifications in your browser settings. Please unblock EventHub to receive alerts.");
             } else {
-                toast.error("Failed to enable notifications.");
+                toast.error(`Error enabling notifications: ${error?.message || "Unknown error occurred"}`);
             }
         } finally {
             setIsLoading(false);
