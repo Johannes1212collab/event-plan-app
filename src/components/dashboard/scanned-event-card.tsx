@@ -1,11 +1,54 @@
+"use client";
+
 import { ScannedEvent } from "@/types/scanner";
 import { format } from "date-fns";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Calendar, MapPin, Ticket, AlertCircle } from "lucide-react";
+import { ExternalLink, Calendar, MapPin, Ticket, AlertCircle, Loader2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createEvent } from "@/actions/event";
+import { toast } from "sonner";
 
 export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+    const [isCreating, setIsCreating] = useState(false);
+
+    const handleCreateGroup = () => {
+        setIsCreating(true);
+        startTransition(async () => {
+            try {
+                // Determine if it's a full-day event (heuristic: if it's precisely midnight)
+                const isFullDay = event.startDate.getHours() === 0 && event.startDate.getMinutes() === 0;
+
+                const payload = {
+                    title: event.title,
+                    description: `Found via ${event.source}.\n\n` + (event.description || ""),
+                    date: event.startDate.toISOString(),
+                    isFullDay,
+                    location: event.location.name + (event.location.address ? ` - ${event.location.address}` : ""),
+                    lat: event.location.lat,
+                    lng: event.location.lng,
+                };
+
+                const result = await createEvent(payload);
+
+                if (result?.error) {
+                    toast.error(result.error);
+                    setIsCreating(false);
+                } else if (result?.success && result.eventId) {
+                    toast.success("Group created! Taking you there now...");
+                    router.push(`/events/${result.eventId}`);
+                }
+            } catch (err) {
+                toast.error("Failed to create event group. Please try again.");
+                setIsCreating(false);
+            }
+        });
+    };
+
     return (
         <div className="flex flex-col md:flex-row border rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-card">
             {/* Image Section */}
@@ -77,11 +120,26 @@ export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
                             </Badge>
                         )}
                     </div>
-                    <Button asChild size="sm">
-                        <a href={event.url} target="_blank" rel="noopener noreferrer">
-                            View {event.source} <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                        </a>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleCreateGroup}
+                            disabled={isCreating || isPending}
+                        >
+                            {(isCreating || isPending) ? (
+                                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            ) : (
+                                <Users className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            Plan Group
+                        </Button>
+                        <Button asChild size="sm">
+                            <a href={event.url} target="_blank" rel="noopener noreferrer">
+                                View {event.source} <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                            </a>
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
