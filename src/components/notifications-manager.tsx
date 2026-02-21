@@ -34,9 +34,7 @@ export function NotificationsManager() {
     }, []);
 
     const checkSubscription = async () => {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (!registration) return;
-
+        const registration = await navigator.serviceWorker.register('/sw.js');
         const subscription = await registration.pushManager.getSubscription();
         setIsSubscribed(!!subscription);
 
@@ -66,23 +64,10 @@ export function NotificationsManager() {
                 throw new Error('Permission not granted');
             }
 
-            // The next-pwa plugin automatically registers the combined service worker on page load.
-            // We just need to reliably grab the active one, or wait for it.
-            let swRegistration = await Promise.race([
-                navigator.serviceWorker.getRegistration(),
-                new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout getting SW Registration")), 5000))
-            ]);
-
-            if (!swRegistration) {
-                swRegistration = await Promise.race([
-                    navigator.serviceWorker.ready,
-                    new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for SW Ready")), 5000))
-                ]);
-            }
-
-            if (!swRegistration) {
-                throw new Error("No active Service Worker found. Please refresh the page.");
-            }
+            // Explicitly register and update our standalone service worker
+            const swRegistration = await navigator.serviceWorker.register('/sw.js');
+            await swRegistration.update();
+            await navigator.serviceWorker.ready;
 
             const subscription = await swRegistration.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -116,9 +101,7 @@ export function NotificationsManager() {
     const unsubscribeButtonOnClick = async () => {
         setIsLoading(true);
         try {
-            const registration = await navigator.serviceWorker.getRegistration();
-            if (!registration) return;
-
+            const registration = await navigator.serviceWorker.register('/sw.js');
             const subscription = await registration.pushManager.getSubscription();
 
             if (subscription) {

@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import withPWAInit from "@ducanh2912/next-pwa";
+
 
 const nextConfig: NextConfig = {
   // Explicitly tell Next.js to allow custom Webpack configs underneath Turbopack
@@ -27,11 +27,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  register: true,
-  customWorkerSrc: "worker",
-});
-
-export default withPWA(nextConfig);
+export default nextConfig;

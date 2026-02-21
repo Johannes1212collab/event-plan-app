@@ -1,3 +1,17 @@
+// Explicit PWA compliance listeners
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+    // Required empty fetch listener for PWA installability on older Androids
+});
+
+// Push notification payload listener
 self.addEventListener('push', function (event) {
     if (event.data) {
         let data;
