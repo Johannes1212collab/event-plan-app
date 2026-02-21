@@ -34,7 +34,8 @@ export function NotificationsManager() {
     }, []);
 
     const checkSubscription = async () => {
-        const registration = await navigator.serviceWorker.ready;
+        // Explicitly register our worker first to guarantee it's available
+        const registration = await navigator.serviceWorker.register('/sw.js');
         const subscription = await registration.pushManager.getSubscription();
         setIsSubscribed(!!subscription);
 
@@ -64,13 +65,9 @@ export function NotificationsManager() {
                 throw new Error('Permission not granted');
             }
 
-            // Attempt to get the service worker, with a timeout so it doesn't hang infinitely
-            const swRegistration = await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise<ServiceWorkerRegistration>((_, reject) =>
-                    setTimeout(() => reject(new Error("Service Worker timeout")), 5000)
-                )
-            ]);
+            // Attempt to explicitly register and get our specific service worker
+            const swRegistration = await navigator.serviceWorker.register('/sw.js');
+            await swRegistration.update(); // Ensure we have the latest payload parsing logic
 
             const subscription = await swRegistration.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -104,7 +101,7 @@ export function NotificationsManager() {
     const unsubscribeButtonOnClick = async () => {
         setIsLoading(true);
         try {
-            const registration = await navigator.serviceWorker.ready;
+            const registration = await navigator.serviceWorker.register('/sw.js');
             const subscription = await registration.pushManager.getSubscription();
 
             if (subscription) {
