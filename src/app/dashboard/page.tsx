@@ -28,6 +28,9 @@ const DashboardPage = async () => {
         select: { hasSeenOnboarding: true }
     });
 
+    const createdEvents = events.filter((e: any) => e.hostId === session.user!.id);
+    const invitedEvents = events.filter((e: any) => e.hostId !== session.user!.id);
+
     return (
         <div className="min-h-screen bg-slate-50">
             <OnboardingTour hasSeenOnboarding={user?.hasSeenOnboarding ?? false} page="dashboard" />
@@ -67,12 +70,12 @@ const DashboardPage = async () => {
                     </Button>
                 </div>
 
-                {events.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-lg border border-dashed border-slate-300">
+                {createdEvents.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-lg border border-dashed border-slate-300">
                         <div className="mx-auto h-12 w-12 text-slate-400">
                             <Calendar className="h-12 w-12" />
                         </div>
-                        <h3 className="mt-2 text-sm font-semibold text-slate-900">No events</h3>
+                        <h3 className="mt-2 text-sm font-semibold text-slate-900">No upcoming events</h3>
                         <p className="mt-1 text-sm text-slate-500">Get started by creating a new event.</p>
                         <div className="mt-6">
                             <Button asChild id="new-event-btn-empty">
@@ -85,35 +88,57 @@ const DashboardPage = async () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {events.map((event: any) => (
-                            <Card key={event.id} className="group hover:border-black/50 transition-colors cursor-pointer">
-                                <Link href={`/events/${event.id}`}>
-                                    <CardHeader>
-                                        <CardTitle className="line-clamp-1">{event.title}</CardTitle>
-                                        <CardDescription className="flex items-center mt-1">
-                                            <Calendar className="h-3 w-3 mr-1" />
-                                            {new Date(event.date).toLocaleDateString()}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-slate-500 line-clamp-2 min-h-[40px]">
-                                            {event.description || "No description provided."}
-                                        </p>
-                                        <div className="flex items-center mt-4 text-xs text-slate-500">
-                                            <MapPin className="h-3 w-3 mr-1" />
-                                            {event.location || "TBD"}
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="pt-0 flex justify-between items-center text-xs text-muted-foreground border-t bg-slate-50/50 p-4">
-                                        <span>Hosted by {event.host.name}</span>
-                                    </CardFooter>
-                                </Link>
-                            </Card>
+                        {createdEvents.map((event: any) => (
+                            <EventCard key={event.id} event={event} />
                         ))}
+                    </div>
+                )}
+
+                {invitedEvents.length > 0 && (
+                    <div className="mt-16">
+                        <div className="flex items-start justify-between mb-8 gap-4 border-t pt-8">
+                            <div className="pr-4 sm:pr-0 max-w-[75%]">
+                                <h2 className="text-2xl font-bold tracking-tight text-slate-900">Invitations</h2>
+                                <p className="text-slate-500 mt-1">Events you are attending or invited to.</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {invitedEvents.map((event: any) => (
+                                <EventCard key={event.id} event={event} />
+                            ))}
+                        </div>
                     </div>
                 )}
             </main>
         </div>
+    );
+}
+
+function EventCard({ event }: { event: any }) {
+    return (
+        <Card className="group hover:border-black/50 transition-colors cursor-pointer flex flex-col h-full shadow-sm hover:shadow-md">
+            <Link href={`/events/${event.id}`} className="flex flex-col flex-grow">
+                <CardHeader>
+                    <CardTitle className="line-clamp-1">{event.title}</CardTitle>
+                    <CardDescription className="flex items-center mt-1">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {new Date(event.date).toLocaleDateString()}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <p className="text-sm text-slate-500 line-clamp-2 min-h-[40px]">
+                        {event.description || "No description provided."}
+                    </p>
+                    <div className="flex items-center mt-4 text-xs text-slate-500 font-medium">
+                        <MapPin className="h-3 w-3 mr-1 text-slate-400" />
+                        <span className="truncate">{event.location || "Location TBD"}</span>
+                    </div>
+                </CardContent>
+                <CardFooter className="mt-auto pt-0 flex justify-between items-center text-xs text-muted-foreground border-t bg-slate-50/80 p-4 rounded-b-lg">
+                    <span>Hosted by {event.host?.name || "Unknown"}</span>
+                </CardFooter>
+            </Link>
+        </Card>
     );
 }
 
