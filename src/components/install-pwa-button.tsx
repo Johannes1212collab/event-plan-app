@@ -9,12 +9,16 @@ export function InstallPWAButton() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isInstallable, setIsInstallable] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const [isAndroid, setIsAndroid] = useState(false);
     const [isInAppBrowser, setIsInAppBrowser] = useState(false);
 
     useEffect(() => {
         // Check if the user is on an iOS device
         const userAgent = (window.navigator.userAgent || window.navigator.vendor).toLowerCase();
         setIsIOS(/iphone|ipad|ipod/.test(userAgent));
+
+        // Check if the user is on an Android device for fallback text
+        setIsAndroid(/android/.test(userAgent));
 
         // Check for common in-app browsers (Facebook, Instagram, TikTok, Snapchat, WeChat, etc)
         setIsInAppBrowser(/fbav|fban|instagram|tiktok|line|snapchat|wechat|micromessenger/i.test(userAgent));
@@ -61,6 +65,15 @@ export function InstallPWAButton() {
             return;
         }
 
+        if (!deferredPrompt && isAndroid) {
+            // Android browsers like Samsung Internet or Chrome sometimes suppress the prompt.
+            toast("Install EventHub", {
+                description: "Tap the menu icon (⋮ or 三) in your browser, then select 'Install app' or 'Add to Home screen'.",
+                duration: 6000,
+            });
+            return;
+        }
+
         if (!deferredPrompt) {
             toast.info("App is already installed, or your browser window doesn't support automatic installation.");
             return;
@@ -94,7 +107,7 @@ export function InstallPWAButton() {
                 EventHub
             </h1>
 
-            {(isInstallable || isIOS) && (
+            {(isInstallable || isIOS || isAndroid) && (
                 <div className="absolute -right-2 -top-2 bg-blue-600 text-white rounded-full p-1 shadow-sm sm:static sm:bg-transparent sm:text-blue-600 sm:p-0 sm:shadow-none sm:ml-2 sm:opacity-0 sm:-translate-y-1 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
                     <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                 </div>
