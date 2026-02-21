@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { scanSurroundingEvents } from "@/actions/scanner";
@@ -27,6 +27,12 @@ export default function EventScanner() {
     const [hasScanned, setHasScanned] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Infinite Scroll Pagination States
+    const [offset, setOffset] = useState<number>(0);
+    const [hasMore, setHasMore] = useState<boolean>(false);
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+    const observerTarget = useRef<HTMLDivElement>(null);
+
     const handleLocationSelect = (addr: string, lat: number, lng: number) => {
         setAddress(addr);
         setSelectedLat(lat);
@@ -40,17 +46,21 @@ export default function EventScanner() {
         setError(null);
         setHasScanned(false);
         setResults([]);
+        setOffset(0);
+        setHasMore(false);
 
         try {
-            const events = await scanSurroundingEvents({
+            const { events, hasMore: moreAvailable } = await scanSurroundingEvents({
                 address,
                 lat: selectedLat,
                 lng: selectedLng,
                 radiusKm: radius,
                 startDate,
-                endDate
+                endDate,
+                offset: 0
             });
             setResults(events);
+            setHasMore(moreAvailable);
         } catch (err) {
             setError((err as Error).message);
         } finally {
@@ -58,6 +68,56 @@ export default function EventScanner() {
             setHasScanned(true);
         }
     };
+
+    const loadMore = useCallback(async () => {
+        if (!selectedLat || !selectedLng || !address || isLoadingMore || !hasMore) return;
+
+        setIsLoadingMore(true);
+        const nextOffset = offset + 10;
+
+        try {
+            const { events, hasMore: moreAvailable } = await scanSurroundingEvents({
+                address,
+                lat: selectedLat,
+                lng: selectedLng,
+                radiusKm: radius,
+                startDate,
+                endDate,
+                offset: nextOffset
+            });
+
+            setResults(prev => {
+                // Filter out any duplicate IDs to prevent rendering bugs if Google's pagination shifts mid-scroll
+                const existingIds = new Set(prev.map(e => e.id));
+                const newEvents = events.filter(e => !existingIds.has(e.id));
+                return [...prev, ...newEvents];
+            });
+            setHasMore(moreAvailable);
+            setOffset(nextOffset);
+        } catch (err) {
+            console.error("Failed to fetch more events:", err);
+            setHasMore(false);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    }, [address, endDate, hasMore, isLoadingMore, offset, radius, selectedLat, selectedLng, startDate]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isScanning) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1, rootMargin: '100px' }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, isScanning, loadMore]);
 
     return (
         <div className="w-full space-y-8">
@@ -161,6 +221,16 @@ export default function EventScanner() {
                             <ScannedEventCard key={event.id} event={event} />
                         ))}
                     </div>
+
+                    {/* Infinite Scroll Trigger */}
+                    <div ref={observerTarget} className="h-4 w-full" />
+
+                    {isLoadingMore && (
+                        <div className="flex justify-center items-center py-6 text-muted-foreground">
+                            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                            Loading more events...
+                        </div>
+                    )}
                 </div>
             )}
         </div>

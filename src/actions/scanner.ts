@@ -9,10 +9,12 @@ interface ScannerParams {
     radiusKm: number;
     startDate: string; // ISO String (e.g. 2026-02-22)
     endDate: string;   // ISO String (e.g. 2026-03-01)
+    offset?: number;
 }
 
-export async function scanSurroundingEvents(params: ScannerParams): Promise<ScannedEvent[]> {
+export async function scanSurroundingEvents(params: ScannerParams): Promise<{ events: ScannedEvent[], hasMore: boolean }> {
     const events: ScannedEvent[] = [];
+    let hasMore = false;
 
     // Parallel execution of all our API scrapers
     const results = await Promise.allSettled([
@@ -23,6 +25,7 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
     // Push successful Eventfinda hits
     if (results[0].status === "fulfilled") {
         events.push(...results[0].value);
+        if (results[0].value.length === 40) hasMore = true;
     } else {
         console.error("Eventfinda Scraper Failed:", results[0].reason);
     }
@@ -30,6 +33,7 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
     // Push successful Google Events hits
     if (results[1].status === "fulfilled") {
         events.push(...results[1].value);
+        if (results[1].value.length === 10) hasMore = true;
     } else {
         console.error("Google Events Scraper Failed:", results[1].reason);
     }
@@ -45,7 +49,9 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<Scan
     });
 
     // Sort chronologically by Start Date
-    return filteredEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    const finalEvents = filteredEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+    return { events: finalEvents, hasMore };
 }
 
 async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }: ScannerParams): Promise<ScannedEvent[]> {
@@ -117,7 +123,7 @@ async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }:
     }
 }
 
-async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: ScannerParams): Promise<ScannedEvent[]> {
+async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset }: ScannerParams): Promise<ScannedEvent[]> {
     const API_KEY = process.env.SERPAPI_KEY;
 
     if (!API_KEY) {
@@ -145,6 +151,10 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: Scan
 
     const searchQuery = `events near ${address} starting ${dateFormatted}`;
     url.searchParams.append("q", searchQuery);
+
+    if (offset) {
+        url.searchParams.append("start", offset.toString());
+    }
 
     try {
         const response = await fetch(url.toString(), {
