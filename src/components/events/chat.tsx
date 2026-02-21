@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { sendMessage, getMessages } from "@/actions/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, Loader2, Paperclip, Check, CheckCheck, Download } from "lucide-react";
+import { Send, Image as ImageIcon, Loader2, Paperclip, Check, CheckCheck, Download, X, Reply } from "lucide-react";
 import Image from "next/image";
 
 interface Message {
@@ -20,6 +20,14 @@ interface Message {
         image: string | null;
         id: string;
     };
+    replyToId?: string | null;
+    replyTo?: {
+        id: string;
+        content: string | null;
+        sender: {
+            name: string | null;
+        }
+    };
     pending?: boolean;
 }
 
@@ -32,6 +40,7 @@ interface ChatProps {
 export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => {
     const [content, setContent] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [realMessages, setRealMessages] = useState<Message[]>(initialMessages);
     const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -158,13 +167,20 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 image: null,
                 id: currentUserId
             },
+            replyToId: replyingTo?.id,
+            replyTo: replyingTo ? {
+                id: replyingTo.id,
+                content: replyingTo.content,
+                sender: { name: replyingTo.sender.name }
+            } : undefined,
             pending: true
         };
 
         setPendingMessages(prev => [...prev, pendingMessage]);
 
         try {
-            const res = await sendMessage({ content: msg, eventId });
+            const res = await sendMessage({ content: msg, eventId, replyToId: replyingTo?.id });
+            setReplyingTo(null);
 
             // On success, manually inject the official record to prevent any UI flicker before polling catches it
             if (res?.message) {
@@ -269,7 +285,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     };
 
     return (
-        <div id="chat" className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-background shadow-sm overflow-hidden">
+        <div id="chat" className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-background shadow-sm overflow-hidden relative">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950" ref={scrollRef}>
                 {allMessages.length === 0 && (
                     <div className="text-center text-muted-foreground mt-10">
@@ -279,9 +295,41 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                 {allMessages.map((msg) => {
                     const isMe = msg.senderId === currentUserId;
                     return (
-                        <div id={`msg-${msg.id}`} key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} scroll-mt-20 rounded-lg`}>
-                            <div className={`max-w-[70%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-card border text-card-foreground shadow-sm"}`}>
+                        <div
+                            id={`msg-${msg.id}`}
+                            key={msg.id}
+                            className={`flex ${isMe ? "justify-end" : "justify-start"} scroll-mt-20 rounded-lg select-none`}
+                            onContextMenu={(e) => {
+                                e.preventDefault();
+                                setReplyingTo(msg);
+                                setTimeout(() => inputRef.current?.focus(), 50);
+                            }}
+                        >
+                            <div className={`max-w-[75%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-card border text-card-foreground shadow-sm"}`}>
                                 {!isMe && <p className="text-xs font-bold mb-1 opacity-70">{msg.sender.name}</p>}
+
+                                {/* Quoted Message Block */}
+                                {msg.replyTo && (
+                                    <div
+                                        onClick={() => {
+                                            const target = document.getElementById(`msg-${msg.replyTo!.id}`);
+                                            if (target) {
+                                                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                target.classList.add("ring-2", "ring-primary", "ring-offset-2", "transition-all", "duration-1000");
+                                                setTimeout(() => target.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 2000);
+                                            }
+                                        }}
+                                        className={`text-xs mb-2 p-2 rounded border-l-4 cursor-pointer hover:opacity-80 transition-opacity ${isMe ? "bg-blue-700/50 border-blue-300 text-blue-50" : "bg-muted border-primary/50 text-muted-foreground"}`}
+                                    >
+                                        <p className="font-semibold text-[10px] mb-0.5 flex items-center gap-1">
+                                            <Reply className="h-3 w-3" />
+                                            {msg.replyTo.sender.name}
+                                        </p>
+                                        <p className="line-clamp-2 truncate">
+                                            {msg.replyTo.content || "Attached media"}
+                                        </p>
+                                    </div>
+                                )}
                                 {msg.mediaUrl && (
                                     <div
                                         className="mb-2 rounded overflow-hidden cursor-pointer relative group"
@@ -315,39 +363,64 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     );
                 })}
             </div>
-            <div className="p-4 bg-background border-t">
-                <form onSubmit={onSubmit} className="flex gap-2 items-center">
-                    <Button
-                        id="chat-paperclip"
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full shrink-0"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
-                    >
-                        {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
-                    </Button>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept="image/*,video/*"
-                        multiple
-                        onChange={handleUpload}
-                    />
-                    <Input
-                        ref={inputRef}
-                        onFocus={handleInputFocus}
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Type a message..."
-                        className="flex-1"
-                    />
-                    <Button type="submit" disabled={!content.trim() && !isUploading} size="icon">
-                        <Send className="h-4 w-4" />
-                    </Button>
-                </form>
+            <div className="bg-background border-t flex flex-col">
+                {/* Replying To Preview Banner */}
+                {replyingTo && (
+                    <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b text-sm">
+                        <div className="flex items-center gap-2 overflow-hidden flex-1">
+                            <Reply className="h-4 w-4 text-primary shrink-0" />
+                            <div className="flex flex-col overflow-hidden">
+                                <span className="font-semibold text-xs text-primary">Replying to {replyingTo.sender.name}</span>
+                                <span className="text-muted-foreground truncate text-xs">
+                                    {replyingTo.content || (replyingTo.mediaUrl ? "Attached media" : "Message")}
+                                </span>
+                            </div>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full shrink-0"
+                            onClick={() => setReplyingTo(null)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+
+                <div className="p-4">
+                    <form onSubmit={onSubmit} className="flex gap-2 items-center">
+                        <Button
+                            id="chat-paperclip"
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full shrink-0"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                        >
+                            {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
+                        </Button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={handleUpload}
+                        />
+                        <Input
+                            ref={inputRef}
+                            onFocus={handleInputFocus}
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            placeholder="Type a message..."
+                            className="flex-1"
+                        />
+                        <Button type="submit" disabled={!content.trim() && !isUploading} size="icon">
+                            <Send className="h-4 w-4" />
+                        </Button>
+                    </form>
+                </div>
             </div>
         </div>
     );

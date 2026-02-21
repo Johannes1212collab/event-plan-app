@@ -21,7 +21,7 @@ export const sendMessage = async (values: any) => {
         return { error: "Unauthorized" };
     }
 
-    const { content, mediaUrl, mediaType, eventId } = values;
+    const { content, mediaUrl, mediaType, eventId, replyToId } = values;
 
     if (!eventId) {
         return { error: "Event ID is required!" };
@@ -39,6 +39,7 @@ export const sendMessage = async (values: any) => {
                 mediaType,
                 eventId,
                 senderId: session.user.id,
+                replyToId,
             },
             include: {
                 sender: {
@@ -46,6 +47,15 @@ export const sendMessage = async (values: any) => {
                         name: true,
                         image: true,
                         id: true
+                    }
+                },
+                replyTo: {
+                    include: {
+                        sender: {
+                            select: {
+                                name: true
+                            }
+                        }
                     }
                 }
             }
@@ -125,6 +135,15 @@ export const getMessages = async (eventId: string) => {
                         id: true,
                     },
                 },
+                replyTo: {
+                    include: {
+                        sender: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
             },
             orderBy: {
                 createdAt: "asc", // Already returning ascending order typically? Let's make it explicitly ascending
