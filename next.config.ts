@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
         hostname: '*.public.blob.vercel-storage.com',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.eventfinda.co.nz',
+      }
     ],
   },
   async rewrites() {
