@@ -11,6 +11,7 @@ export function InstallPWAButton() {
     const [isIOS, setIsIOS] = useState(false);
     const [isAndroid, setIsAndroid] = useState(false);
     const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+    const [isStandalone, setIsStandalone] = useState(false);
 
     useEffect(() => {
         // Check if the user is on an iOS device
@@ -22,6 +23,11 @@ export function InstallPWAButton() {
 
         // Check for common in-app browsers (Facebook, Instagram, TikTok, Snapchat, WeChat, etc)
         setIsInAppBrowser(/fbav|fban|instagram|tiktok|line|snapchat|wechat|micromessenger/i.test(userAgent));
+
+        // Check if the app is already running in installed/standalone mode
+        if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
+            setIsStandalone(true);
+        }
 
         const handleBeforeInstallPrompt = (e: any) => {
             // Prevent the mini-infobar from appearing on mobile
@@ -47,6 +53,12 @@ export function InstallPWAButton() {
     }, []);
 
     const handleInstallClick = async () => {
+        if (isStandalone) {
+            // Already installed, just act as a home link
+            window.location.href = "/dashboard";
+            return;
+        }
+
         if (isInAppBrowser) {
             toast("Open in System Browser", {
                 description: "You are viewing this inside another app. Please tap the menu icon (⋮) in the top corner and select 'Open in Chrome/Safari' to install EventHub.",
@@ -107,7 +119,7 @@ export function InstallPWAButton() {
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 hidden sm:block leading-none">
                     EventHub
                 </h1>
-                {(isInstallable || isIOS || isAndroid) && (
+                {!isStandalone && (isInstallable || isIOS || isAndroid) && (
                     <span className="text-[11px] sm:text-xs font-semibold text-blue-600 flex items-center gap-x-1 whitespace-nowrap mt-0.5 group-hover:text-blue-700 transition-colors">
                         <Download className="h-3 w-3" /> Install EventHub now
                     </span>
