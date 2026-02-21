@@ -34,7 +34,7 @@ export default function EventScanner() {
     };
 
     const handleScan = async () => {
-        if (!selectedLat || !selectedLng) return;
+        if (!selectedLat || !selectedLng || !address) return;
 
         setIsScanning(true);
         setError(null);
@@ -43,6 +43,7 @@ export default function EventScanner() {
 
         try {
             const events = await scanSurroundingEvents({
+                address,
                 lat: selectedLat,
                 lng: selectedLng,
                 radiusKm: radius,
@@ -112,7 +113,7 @@ export default function EventScanner() {
 
                         <Button
                             className="w-full py-6 text-lg"
-                            disabled={!selectedLat || !selectedLng || isScanning}
+                            disabled={!selectedLat || !selectedLng || !address || isScanning}
                             onClick={handleScan}
                         >
                             {isScanning ? (

@@ -3,6 +3,7 @@
 import { ScannedEvent } from "@/types/scanner";
 
 interface ScannerParams {
+    address: string;
     lat: number;
     lng: number;
     radiusKm: number;
@@ -106,7 +107,7 @@ async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }:
     }
 }
 
-async function fetchGoogleEvents({ lat, lng }: ScannerParams): Promise<ScannedEvent[]> {
+async function fetchGoogleEvents({ lat, lng, address }: ScannerParams): Promise<ScannedEvent[]> {
     const API_KEY = process.env.SERPAPI_KEY;
 
     if (!API_KEY) {
@@ -116,7 +117,7 @@ async function fetchGoogleEvents({ lat, lng }: ScannerParams): Promise<ScannedEv
 
     const url = new URL("https://serpapi.com/search.json");
     url.searchParams.append("engine", "google_events");
-    url.searchParams.append("q", `events near ${lat},${lng}`);
+    url.searchParams.append("q", `events near ${address}`);
     url.searchParams.append("hl", "en");
     url.searchParams.append("gl", "nz");
     url.searchParams.append("api_key", API_KEY);
