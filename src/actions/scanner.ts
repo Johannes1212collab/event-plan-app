@@ -107,7 +107,7 @@ async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }:
     }
 }
 
-async function fetchGoogleEvents({ lat, lng, address }: ScannerParams): Promise<ScannedEvent[]> {
+async function fetchGoogleEvents({ lat, lng, address, startDate, endDate }: ScannerParams): Promise<ScannedEvent[]> {
     const API_KEY = process.env.SERPAPI_KEY;
 
     if (!API_KEY) {
@@ -121,6 +121,33 @@ async function fetchGoogleEvents({ lat, lng, address }: ScannerParams): Promise<
     url.searchParams.append("hl", "en");
     url.searchParams.append("gl", "nz");
     url.searchParams.append("api_key", API_KEY);
+
+    // Google Events doesn't support strict custom date ranges in their UI/API.
+    // They use 'htichips'. We'll map the UI's 'startDate' to the most appropriate Google chip.
+    const startObj = new Date(startDate);
+    const now = new Date();
+    const diffTime = startObj.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Calculate difference in days
+
+    let dateChip = "date:this_month"; // Default fallback
+
+    if (diffDays <= 0) {
+        dateChip = "date:today";
+    } else if (diffDays === 1) {
+        dateChip = "date:tomorrow";
+    } else if (diffDays <= 7) {
+        // We'll just call anything within a week "this_week"
+        dateChip = "date:this_week";
+    } else if (diffDays <= 14) {
+        dateChip = "date:next_week";
+    } else if (diffDays <= 30) {
+        // If it's further out but still essentially within a month
+        dateChip = "date:this_month";
+    } else {
+        dateChip = "date:next_month";
+    }
+
+    url.searchParams.append("htichips", dateChip);
 
     try {
         const response = await fetch(url.toString(), {
