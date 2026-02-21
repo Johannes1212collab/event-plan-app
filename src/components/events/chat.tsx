@@ -227,10 +227,10 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
     };
 
     return (
-        <div className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-white shadow-sm overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50" ref={scrollRef}>
+        <div className="flex flex-col min-h-[400px] h-[500px] md:h-[600px] border rounded-lg bg-background shadow-sm overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950" ref={scrollRef}>
                 {optimisticMessages.length === 0 && (
-                    <div className="text-center text-slate-400 mt-10">
+                    <div className="text-center text-muted-foreground mt-10">
                         <p>No messages yet. Start the conversation!</p>
                     </div>
                 )}
@@ -238,7 +238,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     const isMe = msg.senderId === currentUserId;
                     return (
                         <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[70%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-white border text-slate-800"}`}>
+                            <div className={`max-w-[70%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-card border text-card-foreground shadow-sm"}`}>
                                 {!isMe && <p className="text-xs font-bold mb-1 opacity-70">{msg.sender.name}</p>}
                                 {msg.mediaUrl && (
                                     <div className="mb-2 rounded overflow-hidden">
@@ -258,7 +258,7 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     );
                 })}
             </div>
-            <div className="p-4 bg-white border-t">
+            <div className="p-4 bg-background border-t">
                 <form onSubmit={onSubmit} className="flex gap-2 items-center">
                     <Button
                         id="chat-paperclip"

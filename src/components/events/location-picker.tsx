@@ -10,7 +10,7 @@ const LeafletMap = dynamic(
     () => import("@/components/events/leaflet-map"),
     {
         ssr: false,
-        loading: () => <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading Map...</div>
+        loading: () => <div className="h-full w-full bg-secondary animate-pulse flex items-center justify-center text-muted-foreground">Loading Map...</div>
     }
 );
 
@@ -77,16 +77,16 @@ export default function LocationPicker({
                         placeholder="Search for a venue (e.g. London)..."
                         className="pl-10"
                     />
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
 
                 {suggestions.length > 0 && (
-                    <ul className="absolute z-[100] w-full bg-white border border-slate-300 rounded-md shadow-xl mt-1 max-h-60 overflow-auto">
+                    <ul className="absolute z-[100] w-full bg-popover border border-border rounded-md shadow-xl mt-1 max-h-60 overflow-auto">
                         {suggestions.map((place) => (
                             <li
                                 key={place.place_id}
                                 onClick={() => handleSelect(place)}
-                                className="px-4 py-3 hover:bg-slate-100 cursor-pointer text-sm text-slate-900 font-medium border-b border-slate-100 last:border-0"
+                                className="px-4 py-3 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm text-popover-foreground font-medium border-b border-border last:border-0"
                             >
                                 {place.display_name}
                             </li>
@@ -95,7 +95,7 @@ export default function LocationPicker({
                 )}
             </div>
 
-            <div className="h-[200px] w-full rounded-md overflow-hidden border bg-slate-100 relative">
+            <div className="h-[200px] w-full rounded-md overflow-hidden border bg-secondary relative">
                 <LeafletMap
                     center={selectedLocation || [51.505, -0.09]}
                     markerPosition={selectedLocation || undefined}

@@ -88,7 +88,7 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                     <CardTitle>Media Gallery</CardTitle>
                     <CardDescription>Photos and videos shared in the chat will appear here.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center py-10 text-slate-400">
+                <CardContent className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                     <FileImage className="h-12 w-12 mb-2 opacity-20" />
                     <p>No media shared yet.</p>
                 </CardContent>
@@ -127,7 +127,7 @@ export function MediaGallery({ initialMedia }: { initialMedia: MediaItem[] }) {
                         <Button variant="link" size="sm" className="p-0 h-auto" onClick={toggleAll}>
                             {selectedIds.size === initialMedia.length ? "Deselect All" : "Select All"}
                         </Button>
-                        <span className="text-sm text-slate-500">{selectedIds.size} selected</span>
+                        <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
                     </div>
                 )}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

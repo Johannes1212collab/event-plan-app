@@ -139,7 +139,7 @@ const EventPage = async (props: EventPageProps) => {
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <OnboardingTour hasSeenOnboarding={user?.hasSeenOnboarding ?? false} page="event" />
             {!isParticipant && <AutoJoiner eventId={event.id} />}
-            <header className="bg-white border-b sticky top-0 z-10">
+            <header className="bg-background border-b sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <Link href="/dashboard" className="flex items-center gap-x-2 font-bold text-lg hover:opacity-80 transition-opacity">
                         &larr; Back
@@ -160,22 +160,22 @@ const EventPage = async (props: EventPageProps) => {
                                 <CardDescription>Hosted by {event.host.name}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex items-center text-sm text-slate-600">
+                                <div className="flex items-center text-sm text-muted-foreground">
                                     <Calendar className="h-4 w-4 mr-2" />
                                     {new Date(event.date).toLocaleDateString()}
                                     {!event.isFullDay && ` at ${new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                                 </div>
-                                <div className="flex items-center text-sm text-slate-600">
+                                <div className="flex items-center text-sm text-muted-foreground">
                                     <MapPin className="h-4 w-4 mr-2" />
                                     {event.location || "Location TBD"}
                                 </div>
-                                <div className="flex items-start text-sm text-slate-600">
-                                    <span className="font-semibold mr-2">Description:</span>
+                                <div className="flex items-start text-sm text-muted-foreground">
+                                    <span className="font-semibold mr-2 text-foreground">Description:</span>
                                     <p>{event.description || "No description."}</p>
                                 </div>
                                 <div className="pt-4 border-t">
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="text-sm font-medium text-slate-700">Actions</span>
+                                        <span className="text-sm font-medium text-foreground">Actions</span>
                                         <div className="flex gap-2">
                                             <EventActionsMenu event={event} />
                                         </div>

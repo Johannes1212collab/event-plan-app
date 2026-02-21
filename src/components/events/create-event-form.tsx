@@ -108,7 +108,7 @@ export const CreateEventForm = () => {
                                             onChange={(e) => setIsFullDay(e.target.checked)}
                                             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                                         />
-                                        <label htmlFor="isFullDay" className="text-sm font-medium text-slate-700 cursor-pointer">Full Day</label>
+                                        <label htmlFor="isFullDay" className="text-sm font-medium cursor-pointer">Full Day</label>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -120,7 +120,7 @@ export const CreateEventForm = () => {
                                         value={datePart}
                                         onChange={(e) => setDatePart(e.target.value)}
                                         required
-                                        className="flex-1 text-slate-900 border-slate-300"
+                                        className="flex-1 text-foreground border-input"
                                     />
                                     {!isFullDay && (
                                         <Input
@@ -131,7 +131,7 @@ export const CreateEventForm = () => {
                                             value={timePart}
                                             onChange={(e) => setTimePart(e.target.value)}
                                             required
-                                            className="w-32 text-slate-900 border-slate-300"
+                                            className="w-32 text-foreground border-input"
                                         />
                                     )}
                                 </div>
