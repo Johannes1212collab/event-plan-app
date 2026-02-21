@@ -66,7 +66,7 @@ export const CreateEventForm = () => {
     };
 
     return (
-        <Card className="w-[600px] shadow-lg">
+        <Card className="w-full max-w-[600px] shadow-lg mx-auto">
             <CardHeader>
                 <CardTitle className="text-2xl text-center">Create Event</CardTitle>
                 <CardDescription className="text-center">Host a new gathering for your friends.</CardDescription>
@@ -95,7 +95,7 @@ export const CreateEventForm = () => {
                                 placeholder="Let's celebrate..."
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label htmlFor="date" className="text-sm font-medium">Date & Time</label>
@@ -111,7 +111,7 @@ export const CreateEventForm = () => {
                                         <label htmlFor="isFullDay" className="text-sm font-medium cursor-pointer">Full Day</label>
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <Input
                                         id="datePart"
                                         name="datePart"
@@ -131,7 +131,7 @@ export const CreateEventForm = () => {
                                             value={timePart}
                                             onChange={(e) => setTimePart(e.target.value)}
                                             required
-                                            className="w-32 text-foreground border-input"
+                                            className="w-full sm:w-32 text-foreground border-input"
                                         />
                                     )}
                                 </div>
