@@ -200,8 +200,16 @@ const EventPage = async (props: EventPageProps) => {
                                     </div>
                                 </div>
                                 {event.lat && event.lng && (
-                                    <div className="pt-4 border-t h-[200px] w-full rounded-md overflow-hidden">
-                                        <EventMap lat={event.lat} lng={event.lng} />
+                                    <div className="pt-4 border-t space-y-3">
+                                        <div className="h-[200px] w-full rounded-md overflow-hidden">
+                                            <EventMap lat={event.lat} lng={event.lng} />
+                                        </div>
+                                        <Button asChild variant="secondary" className="w-full font-medium">
+                                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}`} target="_blank" rel="noopener noreferrer">
+                                                <MapPin className="mr-2 h-4 w-4" />
+                                                Get Directions
+                                            </a>
+                                        </Button>
                                     </div>
                                 )}
                             </CardContent>

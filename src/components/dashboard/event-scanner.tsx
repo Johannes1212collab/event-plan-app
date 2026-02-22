@@ -7,7 +7,7 @@ import { scanSurroundingEvents } from "@/actions/scanner";
 import { ScannedEvent } from "@/types/scanner";
 import LocationPicker from "@/components/events/location-picker";
 import ScannedEventCard from "@/components/dashboard/scanned-event-card";
-import { Loader2, Search, SlidersHorizontal, Calendar as CalendarIcon, X } from "lucide-react";
+import { Loader2, Search, SlidersHorizontal, Calendar as CalendarIcon, X, Navigation } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function EventScanner() {
@@ -33,10 +33,58 @@ export default function EventScanner() {
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
     const observerTarget = useRef<HTMLDivElement>(null);
 
+    const [isLocating, setIsLocating] = useState(false);
+
     const handleLocationSelect = (addr: string, lat: number, lng: number) => {
         setAddress(addr);
         setSelectedLat(lat);
         setSelectedLng(lng);
+    };
+
+    const handleGeolocate = () => {
+        setIsLocating(true);
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    try {
+                        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+                        const data = await res.json();
+                        let foundAddress = "My Location";
+                        if (data.results && data.results.length > 0) {
+                            const localityObj = data.results.find((r: any) => r.types.includes("locality"));
+                            if (localityObj) {
+                                foundAddress = localityObj.formatted_address;
+                            } else {
+                                foundAddress = data.results[0].formatted_address;
+                            }
+                        }
+
+                        setAddress(foundAddress);
+                        setSelectedLat(lat);
+                        setSelectedLng(lng);
+                        setRadius(5); // Default 5km for current location
+                    } catch (error) {
+                        console.error("Geocoding failed", error);
+                        setAddress("Current Location");
+                        setSelectedLat(lat);
+                        setSelectedLng(lng);
+                        setRadius(5);
+                    } finally {
+                        setIsLocating(false);
+                    }
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    setIsLocating(false);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            setIsLocating(false);
+        }
     };
 
     const handleScan = async () => {
@@ -131,8 +179,29 @@ export default function EventScanner() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Location Column */}
                     <div className="md:col-span-12 lg:col-span-6 space-y-2">
-                        <label className="text-sm font-medium">Search Center</label>
+                        <div className="flex items-center justify-between pb-1">
+                            <label className="text-sm font-medium">Search Center</label>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={handleGeolocate}
+                                disabled={isLocating}
+                            >
+                                {isLocating ? (
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                    <Navigation className="h-3 w-3 mr-1" />
+                                )}
+                                Around me
+                            </Button>
+                        </div>
                         <LocationPicker onLocationSelect={handleLocationSelect} />
+                        {address && selectedLat && selectedLng && (
+                            <p className="text-xs text-muted-foreground mt-1 text-right">
+                                Active Center: <span className="font-semibold text-foreground">{address}</span>
+                            </p>
+                        )}
                     </div>
 
                     {/* Filters Column */}
