@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { sendPushNotification } from "@/lib/push";
 
 /**
  * Toggles a follow relationship between the authenticated user and another user.
@@ -62,6 +63,14 @@ export async function toggleFollow(targetUserId: string) {
                 }
             });
             revalidatePath(`/user/${targetUserId}`);
+
+            // Notify the user being followed
+            await sendPushNotification([targetUserId], {
+                title: "New Follower",
+                body: `${session.user.name || "Someone"} started following you!`,
+                url: `/user/${session.user.id}`
+            });
+
             return { success: `You are now following ${targetUser.name || 'this user'}.`, isFollowing: true };
         }
 

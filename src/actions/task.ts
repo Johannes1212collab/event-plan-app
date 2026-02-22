@@ -2,6 +2,7 @@
 
 import db from "@/lib/db";
 import { auth } from "@/auth";
+import { sendPushNotification } from "@/lib/push";
 
 export async function getTasks(eventId: string) {
     const session = await auth();
@@ -62,6 +63,22 @@ export async function createTask(data: { eventId: string; title: string; descrip
             }
         });
 
+        // Notify participants about the new checklist item
+        if (event) {
+            const participants = await db.participant.findMany({
+                where: { eventId: data.eventId },
+                select: { userId: true }
+            });
+            const participantIds = participants.map(p => p.userId).filter(id => id !== session.user!.id);
+            if (participantIds.length > 0) {
+                await sendPushNotification(participantIds, {
+                    title: `New Checklist Item: ${event.title}`,
+                    body: `${session.user.name || "Someone"} added "${data.title}" to the checklist.`,
+                    url: `/events/${event.id}`
+                });
+            }
+        }
+
         return { task };
     } catch (error) {
         console.error("Error creating task:", error);
@@ -82,9 +99,19 @@ export async function toggleTask(taskId: string, isCompleted: boolean) {
             include: {
                 assignments: {
                     include: { user: { select: { id: true, name: true, image: true } } }
-                }
+                },
+                event: { select: { title: true, id: true, participants: { select: { userId: true } } } }
             }
         });
+
+        const participantIds = task.event.participants.map((p: any) => p.userId).filter((id: string) => id !== session.user!.id);
+        if (participantIds.length > 0) {
+            await sendPushNotification(participantIds, {
+                title: `Checklist Update: ${task.event.title}`,
+                body: `${session.user.name || "Someone"} marked "${task.title}" as ${isCompleted ? "completed" : "incomplete"}.`,
+                url: `/events/${task.event.id}`
+            });
+        }
 
         return { task };
     } catch (error) {
@@ -124,9 +151,22 @@ export async function assignTask(taskId: string, userId: string) {
                 userId
             },
             include: {
-                user: { select: { id: true, name: true, image: true } }
+                user: { select: { id: true, name: true, image: true } },
+                task: { select: { title: true, eventId: true } }
             }
         });
+
+        // Notify the assigned user
+        if (userId !== session.user.id) {
+            const event = await db.event.findUnique({ where: { id: assignment.task.eventId } });
+            if (event) {
+                await sendPushNotification([userId], {
+                    title: `You were assigned a task!`,
+                    body: `${session.user.name || "Someone"} assigned you to "${assignment.task.title}" for ${event.title}.`,
+                    url: `/events/${event.id}`
+                });
+            }
+        }
 
         return { assignment };
     } catch (error) {
