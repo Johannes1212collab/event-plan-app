@@ -79,6 +79,12 @@ export default async function Home() {
         {/* Features Bento Grid */}
         <section className="w-full py-20 bg-secondary/30 border-t border-border">
           <div className="container px-4 md:px-6 mx-auto">
+            {/* User Requested Marketing Sub-Header Before Features */}
+            <div className="text-center mb-16 max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
+                Organize unique, personal, private events and share it amongst your close ones with a few easy clicks.
+              </h2>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
               {/* Feature 1 */}

@@ -213,7 +213,7 @@ const EventPage = async (props: EventPageProps) => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="pt-4 border-t">
+                                <div className="pt-4">
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="text-sm font-medium text-foreground">Actions</span>
                                         <div className="flex gap-2">
@@ -222,7 +222,7 @@ const EventPage = async (props: EventPageProps) => {
                                     </div>
                                 </div>
                                 {event.lat && event.lng && (
-                                    <div className="pt-4 border-t space-y-3">
+                                    <div className="pt-4 space-y-3">
                                         <div className="h-[200px] w-full rounded-md overflow-hidden">
                                             <EventMap lat={event.lat} lng={event.lng} />
                                         </div>
