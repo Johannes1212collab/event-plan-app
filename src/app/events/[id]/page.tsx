@@ -241,36 +241,7 @@ const EventPage = async (props: EventPageProps) => {
                             </CardContent>
                         </Card>
 
-                        {/* Event Checklist / Tasks */}
-                        {isParticipant && (
-                            <EventChecklist
-                                eventId={event.id}
-                                initialTasks={(event as any).tasks}
-                                currentUserId={session.user!.id}
-                                isHost={session.user!.id === event.hostId}
-                            />
-                        )}
-
-                        {/* Event Polls */}
-                        {isParticipant && (
-                            <EventPolls
-                                eventId={event.id}
-                                initialPolls={(event as any).polls}
-                                currentUserId={session.user!.id}
-                                isHost={session.user!.id === event.hostId}
-                            />
-                        )}
-
-                        {/* Event Ledger */}
-                        {(event as any).isLedgerEnabled && isParticipant && (
-                            <div id="ledger-tab" className="bg-background rounded-xl border p-4 shadow-sm md:p-6 lg:p-8">
-                                <EventLedger
-                                    eventId={event.id}
-                                    currentUserId={session.user!.id}
-                                    participants={(event as any).participants}
-                                />
-                            </div>
-                        )}
+                        {/* Modules moved to col-span-2 for desktop width */}
 
                         <Card>
                             <CardHeader>
@@ -296,8 +267,43 @@ const EventPage = async (props: EventPageProps) => {
                         <MediaGallery initialMedia={eventMedia} />
                     </div>
 
-                    {/* Chat Section */}
-                    <div className="lg:col-span-2">
+                    {/* Main Content Area (Chat + Modules) */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Event Ledger */}
+                        {(event as any).isLedgerEnabled && isParticipant && (
+                            <div id="ledger-tab" className="bg-background rounded-xl border p-4 shadow-sm md:p-6 lg:p-8">
+                                <EventLedger
+                                    eventId={event.id}
+                                    currentUserId={session.user!.id}
+                                    participants={(event as any).participants}
+                                />
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Event Checklist / Tasks */}
+                            {isParticipant && (
+                                <EventChecklist
+                                    eventId={event.id}
+                                    initialTasks={(event as any).tasks}
+                                    currentUserId={session.user!.id}
+                                    isHost={session.user!.id === event.hostId}
+                                />
+                            )}
+
+                            {/* Event Polls */}
+                            {isParticipant && (
+                                <EventPolls
+                                    eventId={event.id}
+                                    initialPolls={(event as any).polls}
+                                    currentUserId={session.user!.id}
+                                    isHost={session.user!.id === event.hostId}
+                                />
+                            )}
+                        </div>
+
+                        {/* Chat Section */}
                         <Chat
                             eventId={event.id}
                             initialMessages={(event as any).messages}

@@ -132,7 +132,7 @@ export const EventLedger = ({ eventId, currentUserId, participants }: EventLedge
             </Card>
 
             {/* Add Action & History List Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
 
                 {/* Add Expense Form */}
                 <Card className="h-fit">
@@ -162,12 +162,19 @@ export const EventLedger = ({ eventId, currentUserId, participants }: EventLedge
                         </div>
 
                         <Button
-                            className="w-full bg-emerald-600 hover:bg-emerald-700"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 h-auto py-3 flex-col"
                             onClick={handleAddExpense}
                             disabled={isPending}
                         >
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                            Split with Everyone
+                            <div className="flex items-center">
+                                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                <span className="font-semibold">Split with Everyone</span>
+                            </div>
+                            {(parseFloat(amount) > 0) && (
+                                <span className="text-xs text-emerald-100 mt-1">
+                                    Each pays: ${(parseFloat(amount) / participants.length).toFixed(2)}
+                                </span>
+                            )}
                         </Button>
                     </CardContent>
                 </Card>
