@@ -187,9 +187,31 @@ const EventPage = async (props: EventPageProps) => {
                                     <MapPin className="h-4 w-4 mr-2" />
                                     {event.location || "Location TBD"}
                                 </div>
-                                <div className="flex items-start text-sm text-muted-foreground">
-                                    <span className="font-semibold mr-2 text-foreground">Description:</span>
-                                    <p>{event.description || "No description."}</p>
+                                <div className="flex flex-col text-sm text-muted-foreground mt-4">
+                                    <span className="font-semibold text-foreground mb-1">Description:</span>
+                                    <div className="whitespace-pre-wrap break-words overflow-hidden max-w-full">
+                                        {event.description ? (
+                                            event.description.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
+                                                const match = part.match(/\[(.*?)\]\((.*?)\)/);
+                                                if (match) {
+                                                    return (
+                                                        <a
+                                                            key={i}
+                                                            href={match[2]}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-primary hover:underline break-all"
+                                                        >
+                                                            {match[1]}
+                                                        </a>
+                                                    );
+                                                }
+                                                return <span key={i}>{part}</span>;
+                                            })
+                                        ) : (
+                                            "No description."
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="pt-4 border-t">
                                     <div className="flex items-center justify-between gap-2">
