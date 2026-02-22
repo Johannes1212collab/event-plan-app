@@ -44,31 +44,13 @@ export default function EventScanner() {
 
     const handleGeolocate = async () => {
         setIsLocating(true);
+        toast.dismiss();
 
-        const tryIpFallback = async (silent = false) => {
-            try {
-                // Free IP geolocation fallback (no API key required, highly reliable for city-level rough detection)
-                const ipRes = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
-                if (ipRes.ok) {
-                    const ipData = await ipRes.json();
-                    if (ipData.latitude && ipData.longitude) {
-                        await applyCoordinates(ipData.latitude, ipData.longitude, `Approx: ${ipData.city || 'Your Area'}`);
-                        return true;
-                    }
-                }
-            } catch (e) {
-                // Fallback failed
-            }
-            if (!silent) toast.error("Could not determine your location. Please type a city manually.");
-            setIsLocating(false);
-            return false;
-        };
-
-        const applyCoordinates = async (lat: number, lng: number, fallbackName = "My Location") => {
+        const resolveAddress = async (lat: number, lng: number, fallbackCity = "My Location") => {
             try {
                 const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(4000) });
                 const data = await res.json();
-                let foundAddress = fallbackName;
+                let foundAddress = fallbackCity;
                 if (data.results && data.results.length > 0) {
                     const localityObj = data.results.find((r: any) => r.types.includes("locality"));
                     if (localityObj) {
@@ -77,47 +59,61 @@ export default function EventScanner() {
                         foundAddress = data.results[0].formatted_address;
                     }
                 }
-
                 setAddress(foundAddress);
                 setSelectedLat(lat);
                 setSelectedLng(lng);
-                setRadius(5); // Default 5km for current location
+                setRadius(5);
             } catch (error) {
                 console.error("Geocoding failed", error);
-                setAddress(fallbackName);
+                setAddress(fallbackCity);
                 setSelectedLat(lat);
                 setSelectedLng(lng);
                 setRadius(5);
-            } finally {
-                setIsLocating(false);
             }
         };
 
-        let usingIpFallback = false;
-        const fallbackTimeout = setTimeout(async () => {
-            usingIpFallback = true;
-            await tryIpFallback();
-        }, 5000); // 5 sec timeout before injecting IP fallback
+        const tryIpFallback = async () => {
+            try {
+                const ipRes = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
+                if (ipRes.ok) {
+                    const ipData = await ipRes.json();
+                    if (ipData.latitude && ipData.longitude) {
+                        await resolveAddress(ipData.latitude, ipData.longitude, `${ipData.city || 'Your Area'} (Approximate)`);
+                        return true;
+                    }
+                }
+            } catch (err) {
+                console.error("IP Fallback Failed", err);
+            }
+            return false;
+        };
 
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    if (usingIpFallback) return; // Prevent double execution
-                    clearTimeout(fallbackTimeout);
-                    await applyCoordinates(position.coords.latitude, position.coords.longitude);
-                },
-                async (error) => {
-                    if (usingIpFallback) return;
-                    clearTimeout(fallbackTimeout);
-                    console.error("Geolocation error:", error);
-                    // Use IP fallback instead of outright failing
-                    await tryIpFallback();
-                },
-                { enableHighAccuracy: false, timeout: 4500, maximumAge: 60000 }
-            );
-        } else {
-            clearTimeout(fallbackTimeout);
-            await tryIpFallback();
+        const getDeviceLocation = () => {
+            return new Promise<GeolocationPosition>((resolve, reject) => {
+                if (!("geolocation" in navigator)) {
+                    reject(new Error("No Geolocation Support"));
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: false,
+                    timeout: 4000, 
+                    maximumAge: 60000
+                });
+            });
+        };
+
+        try {
+            const position = await getDeviceLocation();
+            await resolveAddress(position.coords.latitude, position.coords.longitude);
+        } catch (deviceError) {
+            console.warn("Device location rejected/timed out. Attempting IP fallback.", deviceError);
+            const ipSuccess = await tryIpFallback();
+            
+            if (!ipSuccess) {
+                toast.error("Could not determine your location. Please type a city manually.");
+            }
+        } finally {
+            setIsLocating(false);
         }
     };
 
