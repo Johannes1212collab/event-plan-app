@@ -154,7 +154,7 @@ export function EventChecklist({ eventId, initialTasks, currentUserId, isHost }:
     };
 
     return (
-        <Card className="w-full">
+        <Card className="w-full" id="event-checklist">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     Checklist & Allocations

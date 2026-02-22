@@ -117,6 +117,15 @@ export const OnboardingTour = ({
                                 },
                             },
                             {
+                                element: "#event-checklist",
+                                popover: {
+                                    title: "Shared To-Do List",
+                                    description: "Who is bringing what? Add items to the checklist here so friends can claim responsibility for them.",
+                                    side: "bottom",
+                                    align: "start",
+                                }
+                            },
+                            {
                                 element: "#chat-paperclip",
                                 popover: {
                                     title: "Share Photos & Videos",
