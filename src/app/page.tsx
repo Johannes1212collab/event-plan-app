@@ -29,7 +29,7 @@ export default async function Home() {
       {/* Navigation */}
       <header className="px-4 lg:px-8 h-16 flex items-center border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <Link className="flex items-center justify-center gap-2 group" href="/">
-          <div className="h-8 w-8 bg-gradient-to-tr from-blue-600 to-cyan-500 rounded-lg text-white flex items-center justify-center font-bold shadow-[0_0_15px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all">EH</div>
+          <div className="h-8 w-8 bg-black rounded-lg text-white flex items-center justify-center font-bold">EH</div>
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">EventHub</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
@@ -66,7 +66,7 @@ export default async function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
-              <Button asChild size="lg" className="h-12 px-8 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0 shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all hover:scale-105">
+              <Button asChild size="lg" className="h-12 px-8 bg-black hover:bg-slate-800 text-white border-0 transition-all">
                 <Link href="/register">Start Planning Free</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="h-12 px-8 border-border hover:bg-accent text-foreground">
