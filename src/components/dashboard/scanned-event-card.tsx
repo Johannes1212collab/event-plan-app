@@ -20,13 +20,31 @@ export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
         setIsCreating(true);
         startTransition(async () => {
             try {
-                // Determine if it's a full-day event (heuristic: if it's precisely midnight)
-                const isFullDay = event.startDate.getHours() === 0 && event.startDate.getMinutes() === 0;
+                // If it's a bare date from SerpAPI, the server parsed it as UTC Midnight.
+                // We run a client-side regex on the 'displayTime' to explicitly extract and set the real local time.
+                let finalDate = new Date(event.startDate);
+                let isFullDay = finalDate.getHours() === 0 && finalDate.getMinutes() === 0;
+
+                if (isFullDay && event.displayTime) {
+                    // Look for patterns like "7 PM", "7:30 PM", "19:00"
+                    const timeMatch = event.displayTime.match(/(\d{1,2})(:(\d{2}))?\s*(am|pm)?/i);
+                    if (timeMatch) {
+                        let hours = parseInt(timeMatch[1], 10);
+                        const minutes = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+                        const modifier = timeMatch[4]?.toLowerCase();
+
+                        if (modifier === 'pm' && hours < 12) hours += 12;
+                        if (modifier === 'am' && hours === 12) hours = 0;
+
+                        finalDate.setHours(hours, minutes, 0, 0);
+                        isFullDay = false; // We found a specific time, so it's not a full day event
+                    }
+                }
 
                 const payload = {
                     title: event.title,
-                    description: `Found via ${event.source}.\n\n` + (event.description || ""),
-                    date: event.startDate.toISOString(),
+                    description: `[View Original Event Details](${event.url})\n\nFound via ${event.source}.\n\n` + (event.description || ""),
+                    date: finalDate.toISOString(),
                     isFullDay,
                     location: event.location.name + (event.location.address ? ` - ${event.location.address}` : ""),
                     lat: event.location.lat,
