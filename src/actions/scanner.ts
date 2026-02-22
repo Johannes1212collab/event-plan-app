@@ -142,14 +142,24 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset
     // Start Date into a human-readable string and inject it directly into the search query.
     // Example: "events near Auckland starting March 6, 2026"
 
-    const startObj = new Date(startDate);
+    // Prevent UTC timezone shifts from pushing the date back 1 day on USA servers
+    const [year, month, day] = startDate.split('-');
+    const startObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
     const dateFormatted = new Intl.DateTimeFormat('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
     }).format(startObj);
 
-    const searchQuery = `events near ${address} starting ${dateFormatted}`;
+    // Google Events API fails if the address is a hyper-specific POI like a literal store unit.
+    // We truncate to the City/Region/Country to get a broad net of events.
+    const addressParts = address.split(',');
+    const generalLocation = addressParts.length > 2
+        ? addressParts.slice(-3).join(',').trim()
+        : address;
+
+    const searchQuery = `events near ${generalLocation} starting ${dateFormatted}`;
     url.searchParams.append("q", searchQuery);
 
     if (offset) {

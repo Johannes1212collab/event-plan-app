@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -42,12 +42,15 @@ function LocationInputMenu({
         debounce: 300,
     });
 
+    const prevExternal = useRef(externalAddress);
+
     useEffect(() => {
-        if (externalAddress && externalAddress !== value) {
+        if (externalAddress && externalAddress !== prevExternal.current) {
             setValue(externalAddress, false);
             clearSuggestions();
+            prevExternal.current = externalAddress;
         }
-    }, [externalAddress, setValue, clearSuggestions, value]);
+    }, [externalAddress, setValue, clearSuggestions]);
 
     const handleSelect = async (address: string) => {
         setValue(address, false);
@@ -65,7 +68,7 @@ function LocationInputMenu({
     };
 
     return (
-        <div className="relative z-50">
+        <div className="relative z-30">
             <div className="relative">
                 <Input
                     value={value}
@@ -122,7 +125,7 @@ export default function LocationPicker({
     if (!isLoaded) return <div className="h-[40px] w-full bg-secondary animate-pulse flex items-center justify-center text-muted-foreground p-4 rounded-md">Loading Map Engine...</div>;
 
     return (
-        <div className="space-y-4 relative z-50">
+        <div className="space-y-4 relative z-20">
             <LocationInputMenu
                 onLocationSelect={onLocationSelect}
                 setSelectedLocation={setSelectedLocation}
