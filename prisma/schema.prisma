@@ -25,6 +25,7 @@ model User {
   accounts      Account[]
   hasSeenOnboarding Boolean @default(false)
   pushSubscriptions PushSubscription[]
+  assignments   TaskAssignment[]
 }
 
 model Account {
@@ -71,6 +72,7 @@ model Event {
   host         User          @relation("HostedEvents", fields: [hostId], references: [id], onDelete: Cascade)
   participants Participant[]
   messages     Message[]
+  tasks        EventTask[]
 }
 
 model Participant {
@@ -116,4 +118,28 @@ model PushSubscription {
 model DeletedEvent {
   id        String   @id
   deletedAt DateTime @default(now())
+}
+
+model EventTask {
+  id          String   @id @default(cuid())
+  eventId     String
+  title       String
+  description String?
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  assignments TaskAssignment[]
+}
+
+model TaskAssignment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  task      EventTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
 }

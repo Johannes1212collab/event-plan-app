@@ -150,6 +150,14 @@ export const getEventById = async (id: string) => {
                     }
                 }
             },
+            tasks: {
+                include: {
+                    assignments: {
+                        include: { user: true }
+                    }
+                },
+                orderBy: { createdAt: "asc" }
+            },
             messages: {
                 include: {
                     sender: {

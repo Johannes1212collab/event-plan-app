@@ -18,6 +18,7 @@ import { AutoJoiner } from "@/components/events/auto-joiner";
 
 
 import { DeleteEventButton } from "@/components/events/delete-event-button";
+import { EventChecklist } from "@/components/events/event-checklist";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     try {
@@ -236,6 +237,16 @@ const EventPage = async (props: EventPageProps) => {
                                 )}
                             </CardContent>
                         </Card>
+
+                        {/* Event Checklist / Tasks */}
+                        {isParticipant && (
+                            <EventChecklist
+                                eventId={event.id}
+                                initialTasks={event.tasks as any}
+                                currentUserId={session.user.id}
+                                isHost={session.user.id === event.hostId}
+                            />
+                        )}
 
                         <Card>
                             <CardHeader>
