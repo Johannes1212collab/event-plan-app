@@ -32,6 +32,9 @@ model User {
   
   followers             Follows[]          @relation("following")
   following             Follows[]          @relation("follower")
+
+  expensesPaid          Expense[]          @relation("paidBy")
+  expenseSplits         ExpenseSplit[]
 }
 
 model Account {
@@ -72,6 +75,7 @@ model Event {
   lng         Float?
   accessCode  String   @unique @default(cuid()) // Simple invite code
   hostId      String
+  isLedgerEnabled Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -80,6 +84,7 @@ model Event {
   messages     Message[]
   tasks        EventTask[]
   polls        Poll[]
+  expenses     Expense[]
 }
 
 model Participant {
@@ -209,4 +214,29 @@ model Follows {
   following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  eventId     String
+  paidById    String
+  amount      Float
+  description String
+  createdAt   DateTime @default(now())
+
+  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  paidBy      User           @relation("paidBy", fields: [paidById], references: [id], onDelete: Cascade)
+  splits      ExpenseSplit[]
+}
+
+model ExpenseSplit {
+  id        String   @id @default(cuid())
+  expenseId String
+  userId    String
+  amount    Float
+
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
 }

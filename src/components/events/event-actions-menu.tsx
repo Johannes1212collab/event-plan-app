@@ -20,9 +20,11 @@ import {
     Link as LinkIcon,
     Share2,
     CalendarPlus,
-    CalendarCheck
+    CalendarCheck,
+    Wallet,
+    Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { InviteGuestDialog } from "./invite-guest-dialog";
 // Actually, Dialogs usually need to wrap the trigger or be controlled. 
 // A DropdownMenuItem cannot easily contain a DialogTrigger without closing the menu.
@@ -36,6 +38,7 @@ import { InviteGuestDialog } from "./invite-guest-dialog";
 import { QRInvite } from "./qr-invite"; // This is a Dialog.
 import { toast } from "sonner";
 import * as ics from "ics";
+import { toggleLedger } from "@/actions/ledger";
 
 interface EventActionsMenuProps {
     event: {
@@ -45,12 +48,15 @@ interface EventActionsMenuProps {
         date: Date;
         location?: string | null;
         durationHours?: number;
+        isLedgerEnabled: boolean;
     };
+    isHost: boolean;
 }
 
-export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
+export const EventActionsMenu = ({ event, isHost }: EventActionsMenuProps) => {
     const [showInviteDialog, setShowInviteDialog] = useState(false);
     const [showQRDialog, setShowQRDialog] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     const handleCopyLink = () => {
         const url = `${window.location.origin}/events/${event.id}`;
@@ -112,6 +118,17 @@ export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
         URL.revokeObjectURL(url);
     };
 
+    const handleToggleLedger = () => {
+        startTransition(async () => {
+            const result = await toggleLedger(event.id, !event.isLedgerEnabled);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success(event.isLedgerEnabled ? "Ledger module disabled." : "Ledger module enabled!");
+            }
+        });
+    };
+
     return (
         <>
             <DropdownMenu>
@@ -139,6 +156,23 @@ export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
                         <LinkIcon className="mr-2 h-4 w-4" />
                         <span>Copy Link</span>
                     </DropdownMenuItem>
+
+                    {isHost && (
+                        <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                onClick={(e) => { e.preventDefault(); handleToggleLedger(); }}
+                                disabled={isPending}
+                            >
+                                {isPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Wallet className="mr-2 h-4 w-4" />
+                                )}
+                                <span>{event.isLedgerEnabled ? "Disable Ledger Module" : "Enable Ledger Module"}</span>
+                            </DropdownMenuItem>
+                        </>
+                    )}
 
                     <DropdownMenuSeparator />
 

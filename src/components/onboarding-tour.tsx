@@ -212,9 +212,18 @@ export const OnboardingTour = ({
                                     element: "#event-actions",
                                     popover: {
                                         title: "Share & Manage",
-                                        description: "Invite friends via email, get a QR code, or add to your calendar from here.",
+                                        description: "Invite friends via email, get a QR code, add to your calendar, or ENABLE THE EVENT LEDGER from here.",
                                         side: "bottom",
                                         align: "end"
+                                    }
+                                },
+                                {
+                                    element: "#ledger-tab",
+                                    popover: {
+                                        title: "Event Ledger",
+                                        description: "Welcome to the Ledger! Split expenses with the group instantly and let the app calculate exactly who owes whom.",
+                                        side: "bottom",
+                                        align: "center",
                                     }
                                 },
                                 {

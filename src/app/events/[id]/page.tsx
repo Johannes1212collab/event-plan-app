@@ -20,6 +20,7 @@ import { AutoJoiner } from "@/components/events/auto-joiner";
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 import { EventChecklist } from "@/components/events/event-checklist";
 import { EventPolls } from "@/components/events/event-polls";
+import { EventLedger } from "@/components/events/event-ledger";
 import { UserAvatarDropdown } from "@/components/user/user-avatar-dropdown";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -220,7 +221,7 @@ const EventPage = async (props: EventPageProps) => {
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="text-sm font-medium text-foreground">Actions</span>
                                         <div className="flex gap-2">
-                                            <EventActionsMenu event={event} />
+                                            <EventActionsMenu event={event as any} isHost={session.user.id === event.hostId} />
                                         </div>
                                     </div>
                                 </div>
