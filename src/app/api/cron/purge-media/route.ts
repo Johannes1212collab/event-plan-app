@@ -42,8 +42,9 @@ export async function GET(request: Request) {
         const urlsToDelete = messagesToPurge.map((m) => m.mediaUrl as string);
         const messageIds = messagesToPurge.map((m) => m.id);
 
-        // 1. Delete blobs from Vercel
-        await del(urlsToDelete);
+        // 1. Delete blobs from Storage provider
+        const { deleteMedia } = await import('@/lib/storage');
+        await deleteMedia(urlsToDelete);
 
         // 2. Update database records to NULL the mediaUrl, but KEEP thumbnailUrl if it exists
         await db.message.updateMany({

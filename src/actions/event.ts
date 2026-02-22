@@ -290,8 +290,8 @@ export const deleteEvent = async (eventId: string) => {
         const mediaUrls = mediaMessages.map((m: any) => m.mediaUrl as string);
         if (mediaUrls.length > 0) {
             try {
-                const { del } = await import('@vercel/blob');
-                await del(mediaUrls);
+                const { deleteMedia } = await import('@/lib/storage');
+                await deleteMedia(mediaUrls);
                 console.log(`Purged ${mediaUrls.length} media blobs for deleted event ${eventId}`);
             } catch (err) {
                 console.error("Failed to delete vercel blobs:", err);
