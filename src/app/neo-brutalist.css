@@ -1,0 +1,160 @@
+/* 
+  NEO-BRUTALIST THEME OVERRIDE
+  This file completely hijacks the clean, modern Shadcn/Tailwind default variables
+  to construct a stark, high-contrast, "Neo-Brutalist" visual aesthetic.
+  
+  To revert the application back to its default state, simply remove or comment out 
+  `import "./neo-brutalist.css"` inside `src/app/layout.tsx`.
+*/
+
+@theme inline {
+    --color-primary: #00e5ff;
+    /* Blinding Cyan */
+    --color-primary-foreground: #000000;
+
+    --color-background: #fdfdfd;
+    /* Harsh white, mimicking paper */
+    --color-foreground: #000000;
+
+    --color-card: #ffffff;
+    --color-card-foreground: #000000;
+
+    --color-popover: #ffffff;
+    --color-popover-foreground: #000000;
+
+    --color-secondary: #ff00ff;
+    /* Aggressive Pink */
+    --color-secondary-foreground: #000000;
+
+    --color-muted: #e0e0e0;
+    --color-muted-foreground: #333333;
+
+    --color-accent: #ffff00;
+    /* Glaring Yellow */
+    --color-accent-foreground: #000000;
+
+    --color-destructive: #ff3333;
+    --color-destructive-foreground: #ffffff;
+
+    --color-border: #000000;
+    --color-input: #ffffff;
+    --color-ring: #00e5ff;
+
+    /* Kill all standard border radii */
+    --radius-sm: 0px;
+    --radius-md: 0px;
+    --radius-lg: 0px;
+    --radius-xl: 0px;
+    --radius-2xl: 0px;
+    --radius-3xl: 0px;
+    --radius-4xl: 0px;
+}
+
+/* Force Light Mode Concept Only - Brutalism rarely uses Dark Mode, but if it does, it's inverse */
+.dark {
+    --color-background: #111111;
+    --color-foreground: #00e5ff;
+    --color-card: #000000;
+    --color-card-foreground: #00e5ff;
+    --color-popover: #000000;
+    --color-popover-foreground: #00e5ff;
+    --color-primary: #ff00ff;
+    --color-primary-foreground: #000000;
+    --color-secondary: #00e5ff;
+    --color-secondary-foreground: #000000;
+    --color-muted: #222222;
+    --color-muted-foreground: #aaaaaa;
+    --color-border: #00e5ff;
+    --color-input: #000000;
+}
+
+/* Base DOM Overrides */
+@layer base {
+
+    /* Enforce Thick Borders on structural elements */
+    * {
+        border-color: var(--color-border) !important;
+    }
+
+    body {
+        background-color: var(--color-background) !important;
+        background-image: radial-gradient(#000000 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: 0 0;
+        /* In dark mode, change the grid dot color */
+    }
+}
+
+.dark body {
+    background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
+}
+
+/* Shadcn Component Hijacking */
+@layer components {
+
+    /* Brutalist Shadows */
+    .shadow-sm,
+    .shadow,
+    .shadow-md,
+    .shadow-lg,
+    .shadow-xl {
+        box-shadow: 4px 4px 0px 0px var(--color-border) !important;
+        transition: all 0.1s ease;
+    }
+
+    .dark .shadow-sm,
+    .dark .shadow,
+    .dark .shadow-md,
+    .dark .shadow-lg,
+    .dark .shadow-xl {
+        box-shadow: 4px 4px 0px 0px var(--color-primary) !important;
+    }
+
+    /* Interactive Element Press Effect */
+    button:active,
+    a:active {
+        transform: translate(2px, 2px) !important;
+        box-shadow: 2px 2px 0px 0px var(--color-border) !important;
+    }
+
+    .dark button:active,
+    .dark a:active {
+        box-shadow: 2px 2px 0px 0px var(--color-primary) !important;
+    }
+
+    /* Force borders to be thicc */
+    .border,
+    .border-t,
+    .border-b,
+    .border-l,
+    .border-r {
+        border-width: 2px !important;
+    }
+
+    /* Target Inputs */
+    input,
+    textarea {
+        border: 2px solid var(--color-border) !important;
+        border-radius: 0 !important;
+        box-shadow: inset 2px 2px 0px 0px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .dark input,
+    .dark textarea {
+        box-shadow: inset 2px 2px 0px 0px rgba(0, 229, 255, 0.1) !important;
+    }
+
+    /* Typography Headers */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .card-title {
+        font-family: var(--font-space-mono), monospace !important;
+        font-weight: 800 !important;
+        text-transform: uppercase;
+        letter-spacing: -0.05em;
+    }
+}
