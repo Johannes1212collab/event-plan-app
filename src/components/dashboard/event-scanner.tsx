@@ -96,7 +96,7 @@ export default function EventScanner() {
                 }
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: false,
-                    timeout: 4000, 
+                    timeout: 4000,
                     maximumAge: 60000
                 });
             });
@@ -108,7 +108,7 @@ export default function EventScanner() {
         } catch (deviceError) {
             console.warn("Device location rejected/timed out. Attempting IP fallback.", deviceError);
             const ipSuccess = await tryIpFallback();
-            
+
             if (!ipSuccess) {
                 toast.error("Could not determine your location. Please type a city manually.");
             }
@@ -226,7 +226,12 @@ export default function EventScanner() {
                                 Around me
                             </Button>
                         </div>
-                        <LocationPicker onLocationSelect={handleLocationSelect} />
+                        <LocationPicker
+                            onLocationSelect={handleLocationSelect}
+                            externalLat={selectedLat}
+                            externalLng={selectedLng}
+                            externalAddress={address}
+                        />
                         {address && selectedLat && selectedLng && (
                             <p className="text-xs text-muted-foreground mt-1 text-right">
                                 Active Center: <span className="font-semibold text-foreground">{address}</span>

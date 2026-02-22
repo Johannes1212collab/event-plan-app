@@ -22,10 +22,12 @@ const GoogleMapUI = dynamic(
 
 function LocationInputMenu({
     onLocationSelect,
-    setSelectedLocation
+    setSelectedLocation,
+    externalAddress
 }: {
     onLocationSelect: (address: string, lat: number, lng: number) => void;
     setSelectedLocation: (loc: [number, number]) => void;
+    externalAddress?: string;
 }) {
     const {
         ready,
@@ -39,6 +41,13 @@ function LocationInputMenu({
         },
         debounce: 300,
     });
+
+    useEffect(() => {
+        if (externalAddress && externalAddress !== value) {
+            setValue(externalAddress, false);
+            clearSuggestions();
+        }
+    }, [externalAddress, setValue, clearSuggestions, value]);
 
     const handleSelect = async (address: string) => {
         setValue(address, false);
@@ -87,10 +96,22 @@ function LocationInputMenu({
 
 export default function LocationPicker({
     onLocationSelect,
+    externalLat,
+    externalLng,
+    externalAddress
 }: {
     onLocationSelect: (address: string, lat: number, lng: number) => void;
+    externalLat?: number | null;
+    externalLng?: number | null;
+    externalAddress?: string;
 }) {
     const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
+
+    useEffect(() => {
+        if (externalLat && externalLng) {
+            setSelectedLocation([externalLat, externalLng]);
+        }
+    }, [externalLat, externalLng]);
 
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
@@ -105,6 +126,7 @@ export default function LocationPicker({
             <LocationInputMenu
                 onLocationSelect={onLocationSelect}
                 setSelectedLocation={setSelectedLocation}
+                externalAddress={externalAddress}
             />
 
             <div className="h-[200px] w-full rounded-md overflow-hidden border bg-secondary relative z-0">
