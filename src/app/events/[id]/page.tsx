@@ -221,7 +221,7 @@ const EventPage = async (props: EventPageProps) => {
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="text-sm font-medium text-foreground">Actions</span>
                                         <div className="flex gap-2">
-                                            <EventActionsMenu event={event as any} isHost={session.user.id === event.hostId} />
+                                            <EventActionsMenu event={event as any} />
                                         </div>
                                     </div>
                                 </div>

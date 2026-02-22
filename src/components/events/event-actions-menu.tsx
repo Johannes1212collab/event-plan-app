@@ -50,10 +50,9 @@ interface EventActionsMenuProps {
         durationHours?: number;
         isLedgerEnabled: boolean;
     };
-    isHost: boolean;
 }
 
-export const EventActionsMenu = ({ event, isHost }: EventActionsMenuProps) => {
+export const EventActionsMenu = ({ event }: EventActionsMenuProps) => {
     const [showInviteDialog, setShowInviteDialog] = useState(false);
     const [showQRDialog, setShowQRDialog] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -157,22 +156,18 @@ export const EventActionsMenu = ({ event, isHost }: EventActionsMenuProps) => {
                         <span>Copy Link</span>
                     </DropdownMenuItem>
 
-                    {isHost && (
-                        <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={(e) => { e.preventDefault(); handleToggleLedger(); }}
-                                disabled={isPending}
-                            >
-                                {isPending ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Wallet className="mr-2 h-4 w-4" />
-                                )}
-                                <span>{event.isLedgerEnabled ? "Disable Ledger Module" : "Enable Ledger Module"}</span>
-                            </DropdownMenuItem>
-                        </>
-                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                        onClick={(e) => { e.preventDefault(); handleToggleLedger(); }}
+                        disabled={isPending}
+                    >
+                        {isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Wallet className="mr-2 h-4 w-4" />
+                        )}
+                        <span>{event.isLedgerEnabled ? "Disable Ledger Module" : "Enable Ledger Module"}</span>
+                    </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
 

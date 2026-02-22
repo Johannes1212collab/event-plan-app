@@ -6,19 +6,20 @@ import { revalidatePath } from "next/cache";
 import { sendPushNotification } from "@/lib/push";
 
 /**
- * Toggles the ledger feature on or off for an event (Host only)
+ * Toggles the ledger feature on or off for an event (Host or Participant)
  */
 export async function toggleLedger(eventId: string, enabled: boolean) {
     const session = await auth();
     if (!session?.user?.id) return { error: "Unauthorized" };
 
     try {
-        const event = await db.event.findUnique({
-            where: { id: eventId }
+        const participant = await db.participant.findUnique({
+            where: { userId_eventId: { userId: session.user.id, eventId } }
         });
+        const event = await db.event.findUnique({ where: { id: eventId } });
 
-        if (!event || event.hostId !== session.user.id) {
-            return { error: "Only the host can toggle the ledger." };
+        if (!participant && event?.hostId !== session.user.id) {
+            return { error: "Only members can toggle the ledger." };
         }
 
         await db.event.update({
