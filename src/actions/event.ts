@@ -103,7 +103,7 @@ export const getEvents = async () => {
     const session = await auth();
 
     if (!session || !session.user || !session.user.id) {
-        return [];
+        return { upcomingEvents: [], pastEvents: [], archivedEvents: [] };
     }
 
     const events = await db.event.findMany({
@@ -127,7 +127,21 @@ export const getEvents = async () => {
         }
     });
 
-    return events;
+    const now = new Date();
+    // 3 days ago
+    const archiveThreshold = new Date();
+    archiveThreshold.setDate(now.getDate() - 3);
+
+    const upcomingEvents = events.filter((e) => e.date >= now);
+    // Past events are strictly less than now, but strictly greater than or equal to the archive threshold
+    const pastEvents = events.filter((e) => e.date < now && e.date >= archiveThreshold);
+    // Archived events are strictly older than the archive threshold
+    const archivedEvents = events.filter((e) => e.date < archiveThreshold);
+
+    // Sort archived events descending by date (newest archive first)
+    archivedEvents.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    return { upcomingEvents, pastEvents, archivedEvents };
 };
 
 export const getEventById = async (id: string) => {

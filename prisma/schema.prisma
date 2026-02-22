@@ -19,14 +19,16 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  hostedEvents  Event[]       @relation("HostedEvents")
-  participating Participant[]
-  messages      Message[]
-  accounts      Account[]
-  hasSeenOnboarding Boolean @default(false)
-  pushSubscriptions PushSubscription[]
-  assignments   TaskAssignment[]
-  votes         PollVote[]
+  hostedEvents          Event[]            @relation("HostedEvents")
+  participating         Participant[]
+  messages              Message[]
+  accounts              Account[]
+  hasSeenOnboarding     Boolean            @default(false)
+  pushSubscriptions     PushSubscription[]
+  assignments           TaskAssignment[]
+  votes                 PollVote[]
+  requestedImages       ImageRequest[]     @relation("RequestedImages")
+  receivedImageRequests ImageRequest[]     @relation("ReceivedImageRequests")
 }
 
 model Account {
@@ -91,19 +93,35 @@ model Participant {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  content   String?
-  mediaUrl  String?
-  mediaType String? // IMAGE, VIDEO
-  eventId   String
-  senderId  String
-  replyToId String?
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  content       String?
+  mediaUrl      String?
+  thumbnailUrl  String?
+  mediaType     String? // IMAGE, VIDEO
+  isMediaPurged Boolean  @default(false)
+  eventId       String
+  senderId      String
+  replyToId     String?
+  createdAt     DateTime @default(now())
 
-  event   Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  sender  User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  replyTo Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
-  replies Message[] @relation("MessageReplies")
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sender        User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo       Message?       @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies       Message[]      @relation("MessageReplies")
+  imageRequests ImageRequest[]
+}
+
+model ImageRequest {
+  id          String   @id @default(cuid())
+  messageId   String
+  requesterId String
+  ownerId     String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime @default(now())
+
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  requester User    @relation("RequestedImages", fields: [requesterId], references: [id], onDelete: Cascade)
+  owner     User    @relation("ReceivedImageRequests", fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model PushSubscription {
@@ -130,7 +148,7 @@ model EventTask {
   isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event       Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
   assignments TaskAssignment[]
 }
 
@@ -140,41 +158,41 @@ model TaskAssignment {
   userId    String
   createdAt DateTime @default(now())
 
-  task      EventTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task EventTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, userId])
 }
 
 model Poll {
-  id               String       @id @default(cuid())
+  id               String    @id @default(cuid())
   eventId          String
   question         String
-  isMultipleChoice Boolean      @default(false)
-  createdAt        DateTime     @default(now())
+  isMultipleChoice Boolean   @default(false)
+  createdAt        DateTime  @default(now())
   closesAt         DateTime?
 
-  event            Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  options          PollOption[]
+  event   Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  options PollOption[]
 }
 
 model PollOption {
-  id        String     @id @default(cuid())
-  pollId    String
-  text      String
-  
-  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  votes     PollVote[]
+  id     String @id @default(cuid())
+  pollId String
+  text   String
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
 }
 
 model PollVote {
-  id        String     @id @default(cuid())
+  id        String   @id @default(cuid())
   optionId  String
   userId    String
-  createdAt DateTime   @default(now())
+  createdAt DateTime @default(now())
 
-  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([optionId, userId]) // A user can only vote for a specific option once
 }

@@ -14,6 +14,7 @@ import { InstallPWAButton } from "@/components/install-pwa-button";
 import { NotificationsManager } from "@/components/notifications-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventScanner from "@/components/dashboard/event-scanner";
+import { ImageRequestsInbox } from "@/components/dashboard/image-requests-inbox";
 
 const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: string }> }) => {
     const session = await auth();
@@ -24,7 +25,7 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
         redirect("/login");
     }
 
-    const events = await getEvents();
+    const { upcomingEvents, pastEvents, archivedEvents } = await getEvents();
 
     // Fetch user to get fresh hasSeenOnboarding status
     const user = await db.user.findUnique({
@@ -32,8 +33,8 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
         select: { hasSeenOnboarding: true }
     });
 
-    const createdEvents = events.filter((e: any) => e.hostId === session.user!.id);
-    const invitedEvents = events.filter((e: any) => e.hostId !== session.user!.id);
+    const createdEvents = upcomingEvents.filter((e: any) => e.hostId === session.user!.id);
+    const invitedEvents = upcomingEvents.filter((e: any) => e.hostId !== session.user!.id);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -47,7 +48,9 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
                         <NotificationsManager />
                         <ShareSiteButton />
                         <span className="hidden sm:block text-sm font-medium text-slate-700 truncate max-w-none">
-                            {session.user.name}
+                            <Link href={`/user/${session.user.id}`} className="hover:underline">
+                                {session.user.name}
+                            </Link>
                         </span>
                         <form action={async () => {
                             "use server";
@@ -62,6 +65,8 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
             </header>
 
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Image Requests Inbox */}
+                <ImageRequestsInbox userId={session.user.id} />
                 <Tabs defaultValue={defaultTab} className="w-full">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <TabsList className="h-11 px-1 bg-slate-200/50">
@@ -114,12 +119,46 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
                             <div className="mt-16">
                                 <div className="flex items-start justify-between mb-8 gap-4 border-t pt-8">
                                     <div className="pr-4 sm:pr-0 max-w-[75%]">
-                                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Invitations</h2>
+                                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Upcoming Invitations</h2>
                                         <p className="text-slate-500 mt-1">Events you are attending or invited to.</p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {invitedEvents.map((event: any) => (
+                                        <EventCard key={event.id} event={event} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {pastEvents.length > 0 && (
+                            <div className="mt-16">
+                                <div className="flex items-start justify-between mb-8 gap-4 border-t pt-8">
+                                    <div className="pr-4 sm:pr-0 max-w-[75%]">
+                                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Past Events</h2>
+                                        <p className="text-slate-500 mt-1">Events that happened within the last 3 days.</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {pastEvents.map((event: any) => (
+                                        <EventCard key={event.id} event={event} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {archivedEvents.length > 0 && (
+                            <div className="mt-16 bg-slate-100/50 p-6 rounded-lg border border-slate-200">
+                                <div className="flex items-start justify-between mb-8 gap-4">
+                                    <div className="pr-4 sm:pr-0 max-w-[75%]">
+                                        <h2 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                                            Archived Events
+                                        </h2>
+                                        <p className="text-slate-500 mt-1">Older events you've hosted or attended.</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75 grayscale-[20%] hover:grayscale-0 transition-all">
+                                    {archivedEvents.map((event: any) => (
                                         <EventCard key={event.id} event={event} />
                                     ))}
                                 </div>

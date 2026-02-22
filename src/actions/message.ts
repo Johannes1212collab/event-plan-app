@@ -21,7 +21,7 @@ export const sendMessage = async (values: any) => {
         return { error: "Unauthorized" };
     }
 
-    const { content, mediaUrl, mediaType, eventId, replyToId } = values;
+    const { content, mediaUrl, thumbnailUrl, mediaType, eventId, replyToId } = values;
 
     if (!eventId) {
         return { error: "Event ID is required!" };
@@ -36,6 +36,7 @@ export const sendMessage = async (values: any) => {
             data: {
                 content,
                 mediaUrl,
+                thumbnailUrl,
                 mediaType,
                 eventId,
                 senderId: session.user.id,

@@ -225,31 +225,59 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
 
             for (const file of Array.from(files)) {
                 let fileToUpload: File | Blob = file;
+                let thumbnailFileToUpload: File | Blob | null = null;
                 const toastId = toast.loading(`Preparing ${file.name}...`);
 
                 try {
-                    if (file.type.startsWith('image/') && imageCompression) {
+                    const isImage = file.type.startsWith('image/');
+
+                    if (isImage && imageCompression) {
                         toast.loading(`Compressing ${file.name}...`, { id: toastId });
+                        // High res version
                         fileToUpload = await imageCompression(file, {
                             maxSizeMB: 1,
                             maxWidthOrHeight: 1920,
                             useWebWorker: true,
                         });
+
+                        // Thumbnail version for archiving
+                        toast.loading(`Generating thumbnail for ${file.name}...`, { id: toastId });
+                        thumbnailFileToUpload = await imageCompression(file, {
+                            maxSizeMB: 0.1, // 100KB
+                            maxWidthOrHeight: 400,
+                            useWebWorker: true,
+                        });
                     }
 
                     toast.loading(`Uploading to server...`, { id: toastId });
-                    const filename = `${file.name.split('.').slice(0, -1).join('.')}-${Math.random().toString(36).substring(2, 9)}.${file.name.split('.').pop()}`;
-                    const newBlob = await upload(filename, fileToUpload as File, {
+
+                    const filenameBase = `${file.name.split('.').slice(0, -1).join('.')}-${Math.random().toString(36).substring(2, 9)}`;
+                    const ext = file.name.split('.').pop();
+
+                    // Upload main file
+                    const newBlob = await upload(`${filenameBase}.${ext}`, fileToUpload as File, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
                     });
 
+                    // Upload thumbnail if available
+                    let thumbnailBlobUrl = null;
+                    if (thumbnailFileToUpload) {
+                        const thumbBlob = await upload(`${filenameBase}-thumb.${ext}`, thumbnailFileToUpload as File, {
+                            access: 'public',
+                            handleUploadUrl: '/api/upload',
+                        });
+                        thumbnailBlobUrl = thumbBlob.url;
+                    }
+
                     // Send message with media
-                    const pendingMessage: Message = {
+                    // We need to locally update Message type to accept thumbnailUrl to avoid TS errors
+                    const pendingMessage: any = {
                         id: Math.random().toString(),
                         content: "",
                         mediaUrl: newBlob.url,
-                        mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                        thumbnailUrl: thumbnailBlobUrl,
+                        mediaType: isImage ? 'IMAGE' : 'VIDEO',
                         senderId: currentUserId,
                         createdAt: new Date(),
                         sender: {
@@ -265,7 +293,8 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                     try {
                         const res = await sendMessage({
                             mediaUrl: newBlob.url,
-                            mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                            thumbnailUrl: thumbnailBlobUrl,
+                            mediaType: isImage ? 'IMAGE' : 'VIDEO',
                             eventId
                         });
 
@@ -341,27 +370,74 @@ export const Chat = ({ eventId, initialMessages, currentUserId }: ChatProps) => 
                                             </p>
                                         </div>
                                     )}
-                                    {msg.mediaUrl && (
-                                        <div
-                                            className="mb-2 rounded overflow-hidden cursor-pointer relative group"
-                                            onClick={() => handleNativeDownload(msg.mediaUrl!)}
-                                        >
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
-                                                <Download className="text-white h-6 w-6 drop-shadow-md" />
+                                    {/* Media Display Component */}
+                                    {(() => {
+                                        // Workaround for `any` type msg injecting new DB columns not tracked in local type
+                                        const rawMsg = msg as any;
+                                        const displayUrl = rawMsg.mediaUrl || rawMsg.thumbnailUrl;
+
+                                        if (!displayUrl) return null;
+
+                                        return (
+                                            <div
+                                                className="mb-2 rounded overflow-hidden cursor-pointer relative group bg-black/5 flex flex-col items-center"
+                                                onClick={() => rawMsg.mediaUrl ? handleNativeDownload(rawMsg.mediaUrl) : null}
+                                            >
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
+                                                    {rawMsg.mediaUrl ? (
+                                                        <Download className="text-white h-6 w-6 drop-shadow-md" />
+                                                    ) : (
+                                                        <span className="text-white text-xs font-semibold px-2 py-1 bg-black/60 rounded">Archived</span>
+                                                    )}
+                                                </div>
+
+                                                {msg.mediaType === "IMAGE" ? (
+                                                    <img
+                                                        src={displayUrl}
+                                                        alt="Shared media"
+                                                        className={`max-w-full h-auto object-cover ${!rawMsg.mediaUrl && rawMsg.thumbnailUrl ? "blur-[1px] opacity-80" : ""}`}
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        src={displayUrl}
+                                                        controls
+                                                        className="max-w-full h-auto"
+                                                        preload="metadata"
+                                                        playsInline
+                                                    />
+                                                )}
+
+                                                {/* If image is purged, show Request Original button */}
+                                                {!rawMsg.mediaUrl && rawMsg.thumbnailUrl && (
+                                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-max">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            className="h-7 text-[10px] shadow-sm bg-white/90 hover:bg-white text-black"
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                try {
+                                                                    const { toast } = await import('sonner');
+                                                                    const { requestImage } = await import('@/actions/image-request');
+                                                                    const res = await requestImage(msg.id);
+
+                                                                    if (res.error) {
+                                                                        toast.error(res.error);
+                                                                    } else {
+                                                                        toast.success(res.success);
+                                                                    }
+                                                                } catch (err) {
+                                                                    console.error(err);
+                                                                }
+                                                            }}
+                                                        >
+                                                            Request Original
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
-                                            {msg.mediaType === "IMAGE" ? (
-                                                <img src={msg.mediaUrl} alt="Shared media" className="max-w-full h-auto object-cover" />
-                                            ) : (
-                                                <video
-                                                    src={msg.mediaUrl}
-                                                    controls
-                                                    className="max-w-full h-auto"
-                                                    preload="metadata"
-                                                    playsInline
-                                                />
-                                            )}
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                     {msg.content && <p>{msg.content}</p>}
                                     <div className="text-[10px] mt-1 opacity-70 flex items-center justify-end gap-1">
                                         <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
