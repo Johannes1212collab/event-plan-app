@@ -22,6 +22,20 @@ export default function EventScanner() {
     // Default 7 days from now
     const [startDate, setStartDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
     const [endDate, setEndDate] = useState<string>(format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"));
+    const [isTodayOnly, setIsTodayOnly] = useState<boolean>(false);
+
+    // Update dates when "Today Only" is toggled
+    useEffect(() => {
+        if (isTodayOnly) {
+            const today = format(new Date(), "yyyy-MM-dd");
+            setStartDate(today);
+            setEndDate(today);
+        } else {
+            // Restore default +7 day window when untoggled
+            setStartDate(format(new Date(), "yyyy-MM-dd"));
+            setEndDate(format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"));
+        }
+    }, [isTodayOnly]);
 
     const [isScanning, setIsScanning] = useState(false);
     const [results, setResults] = useState<ScannedEvent[]>([]);
@@ -256,22 +270,39 @@ export default function EventScanner() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                                <Input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                />
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium">Date Range</label>
+                                <Button
+                                    variant={isTodayOnly ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setIsTodayOnly(!isTodayOnly)}
+                                    className="h-8 text-xs px-3"
+                                >
+                                    Today Only
+                                </Button>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">End Date</label>
-                                <Input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-muted-foreground uppercase">Start</label>
+                                    <Input
+                                        type="date"
+                                        value={startDate}
+                                        disabled={isTodayOnly}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className={isTodayOnly ? "opacity-50 cursor-not-allowed" : ""}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-muted-foreground uppercase">End</label>
+                                    <Input
+                                        type="date"
+                                        value={endDate}
+                                        disabled={isTodayOnly}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className={isTodayOnly ? "opacity-50 cursor-not-allowed" : ""}
+                                    />
+                                </div>
                             </div>
                         </div>
 
