@@ -130,7 +130,7 @@ export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
                     {event.description}
                 </p>
 
-                <div className="mt-auto flex items-center justify-between pt-4 border-t">
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-y-3 pt-4 border-t">
                     <div className="flex items-center gap-2">
                         {event.category && (
                             <Badge variant="outline" className="text-xs font-normal">
@@ -138,7 +138,7 @@ export default function ScannedEventCard({ event }: { event: ScannedEvent }) {
                             </Badge>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap ml-auto">
                         <Button
                             variant="secondary"
                             size="sm"
