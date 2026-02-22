@@ -128,13 +128,13 @@ export default async function Home() {
               </div>
 
               {/* Feature 4 */}
-              <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-purple-500/30 transition-all">
-                <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <BellRing className="h-6 w-6 text-purple-500" />
+              <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-cyan-500/30 transition-all">
+                <div className="h-12 w-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <ThumbsUp className="h-6 w-6 text-cyan-500" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">Push Notifications</h3>
+                <h3 className="text-xl font-bold text-foreground mb-2">Organize With Ease</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Install the progressive web app to receive native mobile push notifications the second someone replies to you.
+                  Organize unique, personal, private events and share it amongst your close ones with a few easy clicks.
                 </p>
               </div>
 
