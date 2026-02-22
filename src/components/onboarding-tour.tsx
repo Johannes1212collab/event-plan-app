@@ -7,7 +7,7 @@ import { completeOnboarding } from "@/actions/user";
 
 interface OnboardingTourProps {
     hasSeenOnboarding: boolean;
-    page: "dashboard" | "event";
+    page: "dashboard" | "event" | "discover";
 }
 
 export const OnboardingTour = ({
@@ -17,7 +17,12 @@ export const OnboardingTour = ({
     const driverObj = useRef<any>(null);
 
     useEffect(() => {
-        if (hasSeenOnboarding) return;
+        if (page === "discover") {
+            const hasSeenScannerTour = localStorage.getItem("hasSeenScannerTour");
+            if (hasSeenScannerTour) return;
+        } else {
+            if (hasSeenOnboarding) return;
+        }
 
         // Initialize driver
         driverObj.current = driver({
@@ -31,7 +36,11 @@ export const OnboardingTour = ({
                 if (!driverObj.current.hasNextStep() || confirm("Skip the intro?")) {
                     driverObj.current.destroy();
                     // Mark as seen when destroy (skip or finish)
-                    completeOnboarding();
+                    if (page === "discover") {
+                        localStorage.setItem("hasSeenScannerTour", "true");
+                    } else {
+                        completeOnboarding();
+                    }
                 }
             },
             steps:
@@ -47,57 +56,106 @@ export const OnboardingTour = ({
                                 align: "start",
                             },
                         },
-                    ]
-                    : [
+                        // Point to discover tab to encourage exploration
                         {
-                            element: "#event-title-card",
+                            element: "#discover-tab",
                             popover: {
-                                title: "Event Details",
-                                description: "Here you can see the main info about the event.",
+                                title: "Discover Local Events",
+                                description: "Looking for something to do? Scan your area for public events to convert into private groups!",
                                 side: "bottom",
                                 align: "start",
-                            },
-                        },
-                        {
-                            element: "#chat-paperclip",
-                            popover: {
-                                title: "Share Photos & Videos",
-                                description:
-                                    "Click the paperclip to upload media to the gallery. Everyone can contribute!",
-                                side: "top",
-                                align: "start",
-                            },
-                        },
-                        {
-                            element: "#event-actions",
-                            popover: {
-                                title: "Share & Manage",
-                                description: "Invite friends via email, get a QR code, or add to your calendar from here.",
-                                side: "bottom",
-                                align: "end"
                             }
-                        },
-                        {
-                            element: "#media-gallery",
-                            popover: {
-                                title: "Media Gallery",
-                                description:
-                                    "All shared photos and videos will appear here. Click 'Select' to download them.",
-                                side: "top",
-                                align: "start",
+                        }
+                    ]
+                    : page === "discover"
+                        ? [
+                            {
+                                element: "#scanner-center",
+                                popover: {
+                                    title: "Search Center",
+                                    description: "Start by entering a city or venue, or simply click 'Around me' to use your device GPS.",
+                                    side: "bottom",
+                                    align: "start",
+                                },
                             },
-                        },
-                        {
-                            element: "#delete-event-btn",
-                            popover: {
-                                title: "Delete Event",
-                                description:
-                                    "Need to cancel? You can delete the event here (only if you are the host).",
-                                side: "top",
-                                align: "end",
+                            {
+                                element: "#scanner-radius",
+                                popover: {
+                                    title: "Adjust the Radius",
+                                    description: "Slide to expand or shrink how far out you want to search for events (up to 100km).",
+                                    side: "bottom",
+                                    align: "start",
+                                },
                             },
-                        },
-                    ],
+                            {
+                                element: "#scanner-dates",
+                                popover: {
+                                    title: "Filter by Date",
+                                    description: "Looking for plans tonight? Hit 'Today Only', or enter a custom weekend date range.",
+                                    side: "top",
+                                    align: "start",
+                                },
+                            },
+                            {
+                                element: "#scanner-find",
+                                popover: {
+                                    title: "Scan Databases",
+                                    description: "Click here to aggregate public events from Google and other providers. Once found, you can convert them directly into private EventHub groups!",
+                                    side: "top",
+                                    align: "start",
+                                },
+                            }
+                        ]
+                        : [
+                            {
+                                element: "#event-title-card",
+                                popover: {
+                                    title: "Event Details",
+                                    description: "Here you can see the main info about the event.",
+                                    side: "bottom",
+                                    align: "start",
+                                },
+                            },
+                            {
+                                element: "#chat-paperclip",
+                                popover: {
+                                    title: "Share Photos & Videos",
+                                    description:
+                                        "Click the paperclip to upload media to the gallery. Everyone can contribute!",
+                                    side: "top",
+                                    align: "start",
+                                },
+                            },
+                            {
+                                element: "#event-actions",
+                                popover: {
+                                    title: "Share & Manage",
+                                    description: "Invite friends via email, get a QR code, or add to your calendar from here.",
+                                    side: "bottom",
+                                    align: "end"
+                                }
+                            },
+                            {
+                                element: "#media-gallery",
+                                popover: {
+                                    title: "Media Gallery",
+                                    description:
+                                        "All shared photos and videos will appear here. Click 'Select' to download them.",
+                                    side: "top",
+                                    align: "start",
+                                },
+                            },
+                            {
+                                element: "#delete-event-btn",
+                                popover: {
+                                    title: "Delete Event",
+                                    description:
+                                        "Need to cancel? You can delete the event here (only if you are the host).",
+                                    side: "top",
+                                    align: "end",
+                                },
+                            },
+                        ],
         });
 
         // Start the tour

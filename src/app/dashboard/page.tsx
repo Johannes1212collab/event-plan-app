@@ -38,6 +38,7 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
     return (
         <div className="min-h-screen bg-slate-50">
             <OnboardingTour hasSeenOnboarding={user?.hasSeenOnboarding ?? false} page="dashboard" />
+            {tab === "discover" && <OnboardingTour hasSeenOnboarding={false} page="discover" />}
             <header className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <InstallPWAButton />
@@ -69,7 +70,7 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
                                     My Events
                                 </Link>
                             </TabsTrigger>
-                            <TabsTrigger value="discover" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-medium text-primary data-[state=active]:text-primary focus:text-primary asChild">
+                            <TabsTrigger value="discover" id="discover-tab" className="text-sm px-6 h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md font-medium text-primary data-[state=active]:text-primary focus:text-primary asChild">
                                 <Link href="/dashboard?tab=discover" className="block w-full h-full pt-1.5 focus:outline-none">
                                     Discover
                                 </Link>

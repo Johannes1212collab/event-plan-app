@@ -222,7 +222,7 @@ export default function EventScanner() {
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     {/* Location Column */}
-                    <div className="md:col-span-12 lg:col-span-6 space-y-2">
+                    <div className="md:col-span-12 lg:col-span-6 space-y-2" id="scanner-center">
                         <div className="flex items-center justify-between pb-1">
                             <label className="text-sm font-medium">Search Center</label>
                             <Button
@@ -255,7 +255,7 @@ export default function EventScanner() {
 
                     {/* Filters Column */}
                     <div className="md:col-span-12 lg:col-span-6 space-y-6">
-                        <div className="space-y-2">
+                        <div className="space-y-2" id="scanner-radius">
                             <label className="text-sm font-medium flex items-center justify-between">
                                 <span>Radius</span>
                                 <span className="text-muted-foreground">{radius} km</span>
@@ -270,7 +270,7 @@ export default function EventScanner() {
                             />
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4" id="scanner-dates">
                             <div className="flex items-center justify-between">
                                 <label className="text-sm font-medium">Date Range</label>
                                 <Button
@@ -307,6 +307,7 @@ export default function EventScanner() {
                         </div>
 
                         <Button
+                            id="scanner-find"
                             className="w-full py-6 text-lg"
                             disabled={!selectedLat || !selectedLng || !address || isScanning}
                             onClick={handleScan}
