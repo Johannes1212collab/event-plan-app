@@ -42,64 +42,82 @@ export default function EventScanner() {
         setSelectedLng(lng);
     };
 
-    const handleGeolocate = () => {
+    const handleGeolocate = async () => {
         setIsLocating(true);
 
-        const fallbackTimeout = setTimeout(() => {
+        const tryIpFallback = async (silent = false) => {
+            try {
+                // Free IP geolocation fallback (no API key required, highly reliable for city-level rough detection)
+                const ipRes = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
+                if (ipRes.ok) {
+                    const ipData = await ipRes.json();
+                    if (ipData.latitude && ipData.longitude) {
+                        await applyCoordinates(ipData.latitude, ipData.longitude, `Approx: ${ipData.city || 'Your Area'}`);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                // Fallback failed
+            }
+            if (!silent) toast.error("Could not determine your location. Please type a city manually.");
             setIsLocating(false);
-            toast.error("Location request timed out. Please check your device location settings.");
-        }, 8000);
+            return false;
+        };
+
+        const applyCoordinates = async (lat: number, lng: number, fallbackName = "My Location") => {
+            try {
+                const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(4000) });
+                const data = await res.json();
+                let foundAddress = fallbackName;
+                if (data.results && data.results.length > 0) {
+                    const localityObj = data.results.find((r: any) => r.types.includes("locality"));
+                    if (localityObj) {
+                        foundAddress = localityObj.formatted_address;
+                    } else {
+                        foundAddress = data.results[0].formatted_address;
+                    }
+                }
+
+                setAddress(foundAddress);
+                setSelectedLat(lat);
+                setSelectedLng(lng);
+                setRadius(5); // Default 5km for current location
+            } catch (error) {
+                console.error("Geocoding failed", error);
+                setAddress(fallbackName);
+                setSelectedLat(lat);
+                setSelectedLng(lng);
+                setRadius(5);
+            } finally {
+                setIsLocating(false);
+            }
+        };
+
+        let usingIpFallback = false;
+        const fallbackTimeout = setTimeout(async () => {
+            usingIpFallback = true;
+            await tryIpFallback();
+        }, 5000); // 5 sec timeout before injecting IP fallback
 
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
+                    if (usingIpFallback) return; // Prevent double execution
                     clearTimeout(fallbackTimeout);
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    try {
-                        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(4000) });
-                        const data = await res.json();
-                        let foundAddress = "My Location";
-                        if (data.results && data.results.length > 0) {
-                            const localityObj = data.results.find((r: any) => r.types.includes("locality"));
-                            if (localityObj) {
-                                foundAddress = localityObj.formatted_address;
-                            } else {
-                                foundAddress = data.results[0].formatted_address;
-                            }
-                        }
-
-                        setAddress(foundAddress);
-                        setSelectedLat(lat);
-                        setSelectedLng(lng);
-                        setRadius(5); // Default 5km for current location
-                    } catch (error) {
-                        console.error("Geocoding failed", error);
-                        setAddress("Current Location");
-                        setSelectedLat(lat);
-                        setSelectedLng(lng);
-                        setRadius(5);
-                    } finally {
-                        setIsLocating(false);
-                    }
+                    await applyCoordinates(position.coords.latitude, position.coords.longitude);
                 },
-                (error) => {
+                async (error) => {
+                    if (usingIpFallback) return;
                     clearTimeout(fallbackTimeout);
                     console.error("Geolocation error:", error);
-                    let errMsg = "Failed to get location.";
-                    if (error.code === 1) errMsg = "Location permission denied. Please allow location access.";
-                    if (error.code === 2) errMsg = "Position unavailable. Network or GPS is unreachable.";
-                    if (error.code === 3) errMsg = "Location request timed out.";
-                    toast.error(errMsg);
-                    setIsLocating(false);
+                    // Use IP fallback instead of outright failing
+                    await tryIpFallback();
                 },
-                { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 }
+                { enableHighAccuracy: false, timeout: 4500, maximumAge: 60000 }
             );
         } else {
             clearTimeout(fallbackTimeout);
-            toast.error("Geolocation is not supported by your browser.");
-            setIsLocating(false);
+            await tryIpFallback();
         }
     };
 
