@@ -9,6 +9,7 @@ import LocationPicker from "@/components/events/location-picker";
 import ScannedEventCard from "@/components/dashboard/scanned-event-card";
 import { Loader2, Search, SlidersHorizontal, Calendar as CalendarIcon, X, Navigation } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function EventScanner() {
     const [selectedLat, setSelectedLat] = useState<number | null>(null);
@@ -43,14 +44,21 @@ export default function EventScanner() {
 
     const handleGeolocate = () => {
         setIsLocating(true);
+
+        const fallbackTimeout = setTimeout(() => {
+            setIsLocating(false);
+            toast.error("Location request timed out. Please check your device location settings.");
+        }, 8000);
+
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
+                    clearTimeout(fallbackTimeout);
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
 
                     try {
-                        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`);
+                        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`, { signal: AbortSignal.timeout(4000) });
                         const data = await res.json();
                         let foundAddress = "My Location";
                         if (data.results && data.results.length > 0) {
@@ -77,12 +85,20 @@ export default function EventScanner() {
                     }
                 },
                 (error) => {
+                    clearTimeout(fallbackTimeout);
                     console.error("Geolocation error:", error);
+                    let errMsg = "Failed to get location.";
+                    if (error.code === 1) errMsg = "Location permission denied. Please allow location access.";
+                    if (error.code === 2) errMsg = "Position unavailable. Network or GPS is unreachable.";
+                    if (error.code === 3) errMsg = "Location request timed out.";
+                    toast.error(errMsg);
                     setIsLocating(false);
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: false, timeout: 7000, maximumAge: 60000 }
             );
         } else {
+            clearTimeout(fallbackTimeout);
+            toast.error("Geolocation is not supported by your browser.");
             setIsLocating(false);
         }
     };
