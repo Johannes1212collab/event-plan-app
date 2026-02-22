@@ -20,6 +20,7 @@ import { AutoJoiner } from "@/components/events/auto-joiner";
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 import { EventChecklist } from "@/components/events/event-checklist";
 import { EventPolls } from "@/components/events/event-polls";
+import { UserAvatarDropdown } from "@/components/user/user-avatar-dropdown";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     try {
@@ -150,7 +151,7 @@ const EventPage = async (props: EventPageProps) => {
     // For now, assume if you have the link (and probably added to participant on creation or join)
     // We need a 'Join' flow if not participant. But let's keep it simple: if you see it, you can chat.
     // Or better: auto-join if you have the link?
-    const isParticipant = event.participants.some((p: any) => p.userId === session?.user?.id);
+    const isParticipant = (event as any).participants.some((p: any) => p.userId === session?.user?.id);
 
 
     // ... existing imports ...
@@ -177,7 +178,7 @@ const EventPage = async (props: EventPageProps) => {
                         <Card>
                             <CardHeader>
                                 <CardTitle>{event.title}</CardTitle>
-                                <CardDescription>Hosted by {event.host.name}</CardDescription>
+                                <CardDescription>Hosted by {(event as any).host.name}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-center text-sm text-muted-foreground">
@@ -243,9 +244,9 @@ const EventPage = async (props: EventPageProps) => {
                         {isParticipant && (
                             <EventChecklist
                                 eventId={event.id}
-                                initialTasks={event.tasks as any}
-                                currentUserId={session.user.id}
-                                isHost={session.user.id === event.hostId}
+                                initialTasks={(event as any).tasks}
+                                currentUserId={session.user!.id}
+                                isHost={session.user!.id === event.hostId}
                             />
                         )}
 
@@ -253,23 +254,25 @@ const EventPage = async (props: EventPageProps) => {
                         {isParticipant && (
                             <EventPolls
                                 eventId={event.id}
-                                initialPolls={event.polls as any}
-                                currentUserId={session.user.id}
-                                isHost={session.user.id === event.hostId}
+                                initialPolls={(event as any).polls}
+                                currentUserId={session.user!.id}
+                                isHost={session.user!.id === event.hostId}
                             />
                         )}
 
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-base">Participants ({event.participants.length})</CardTitle>
+                                <CardTitle className="text-base">Participants ({(event as any).participants.length})</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
-                                    {event.participants.map((p: any) => (
+                                    {(event as any).participants.map((p: any) => (
                                         <div key={p.id} className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
-                                            <div className="h-6 w-6 rounded-full bg-slate-300 flex items-center justify-center text-xs font-bold">
-                                                {p.user.name?.[0] || "?"}
-                                            </div>
+                                            <UserAvatarDropdown
+                                                user={p.user}
+                                                currentUserId={session.user!.id}
+                                                className="h-6 w-6 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-1 transition-all"
+                                            />
                                             <span className="text-xs font-medium truncate max-w-[100px]">{p.user.name}</span>
                                         </div>
                                     ))}
@@ -285,8 +288,8 @@ const EventPage = async (props: EventPageProps) => {
                     <div className="lg:col-span-2">
                         <Chat
                             eventId={event.id}
-                            initialMessages={event.messages}
-                            currentUserId={session.user.id}
+                            initialMessages={(event as any).messages}
+                            currentUserId={session.user!.id}
                         />
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Download, Check, CheckCheck, Reply } from "lucide-react";
 import { Message } from "@/hooks/use-chat";
+import { UserAvatarDropdown } from "@/components/user/user-avatar-dropdown";
 
 interface ChatMessageListProps {
     messages: Message[];
@@ -40,7 +41,18 @@ export function ChatMessageList({
                         }}
                     >
                         <div className={`max-w-[75%] rounded-lg p-3 ${isMe ? "bg-blue-600 text-white" : "bg-card border text-card-foreground shadow-sm"}`}>
-                            {!isMe && <p className="text-xs font-bold mb-1 opacity-70">{msg.sender.name}</p>}
+                            {!isMe && (
+                                <div className="flex flex-col mb-1 pb-1 border-b border-primary/10">
+                                    <div className="flex items-center gap-2">
+                                        <UserAvatarDropdown
+                                            user={msg.sender}
+                                            currentUserId={currentUserId}
+                                            className="h-5 w-5 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-1 transition-all"
+                                        />
+                                        <p className="text-xs font-bold opacity-70">{msg.sender.name}</p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Quoted Message Block */}
                             {msg.replyTo && (

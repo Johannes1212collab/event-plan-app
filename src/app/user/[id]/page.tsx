@@ -5,7 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, MapPin, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, ArrowLeft, UserPlus, UserMinus, Loader2 } from "lucide-react";
+import { EditableAvatar } from "@/components/user/editable-avatar";
+import { toggleFollow } from "@/actions/follow";
+import { revalidatePath } from "next/cache";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -27,8 +30,10 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                         }
                     }
                 }
-            }
-        }
+            },
+            followers: true,
+            following: true,
+        } as any // Bypass strict Prisma typings which haven't caught up to generated client
     });
 
     if (!user) {
@@ -42,9 +47,12 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
     // Get all events the user participated in that are older than the archive threshold
     const pastAttendedEvents = user.participating
-        .map(p => p.event)
-        .filter(e => e.date < archiveThreshold)
-        .sort((a, b) => b.date.getTime() - a.date.getTime());
+        .map((p: any) => p.event)
+        .filter((e: any) => e.date < archiveThreshold)
+        .sort((a: any, b: any) => b.date.getTime() - a.date.getTime());
+
+    const isSelf = session.user!.id === user.id;
+    const isFollowing = (user as any).followers.some((f: any) => f.followerId === session.user!.id);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -60,27 +68,58 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
             <main className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-xl shadow-sm border p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
                     <div className="flex-shrink-0">
-                        {user.image ? (
-                            <img src={user.image} alt={user.name || "User"} className="h-32 w-32 rounded-full object-cover border-4 border-slate-100 shadow-sm" />
-                        ) : (
-                            <div className="h-32 w-32 rounded-full bg-slate-200 flex items-center justify-center text-4xl text-slate-500 font-bold border-4 border-slate-100 shadow-sm">
-                                {user.name?.charAt(0) || "U"}
-                            </div>
-                        )}
+                        <EditableAvatar
+                            userId={user.id}
+                            initialImage={user.image}
+                            name={user.name}
+                            isOwner={isSelf}
+                        />
                     </div>
 
                     <div className="text-center md:text-left flex-grow">
-                        <h2 className="text-3xl font-bold text-slate-900">{user.name}</h2>
-                        <p className="text-slate-500 mt-2 text-sm italic">Joined {user.createdAt.toLocaleDateString()}</p>
+                        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4">
+                            <div>
+                                <h2 className="text-3xl font-bold text-slate-900">{user.name}</h2>
+                                <p className="text-slate-500 mt-2 text-sm italic">Joined {user.createdAt.toLocaleDateString()}</p>
+                            </div>
+
+                            {!isSelf && (
+                                <form action={async () => {
+                                    "use server";
+                                    await toggleFollow(user.id);
+                                    revalidatePath(`/user/${user.id}`);
+                                }}>
+                                    <Button
+                                        type="submit"
+                                        variant={isFollowing ? "outline" : "default"}
+                                        className="w-full md:w-auto"
+                                    >
+                                        {isFollowing ? (
+                                            <>
+                                                <UserMinus className="mr-2 h-4 w-4" /> Unfollow
+                                            </>
+                                        ) : (
+                                            <>
+                                                <UserPlus className="mr-2 h-4 w-4" /> Follow
+                                            </>
+                                        )}
+                                    </Button>
+                                </form>
+                            )}
+                        </div>
 
                         <div className="mt-6 flex flex-wrap gap-4 justify-center md:justify-start">
-                            <div className="bg-slate-50 px-4 py-2 rounded-lg border text-center">
+                            <div className="bg-slate-50 px-4 py-2 rounded-lg border text-center min-w-[100px]">
                                 <p className="text-2xl font-bold text-slate-800">{user.participating.length}</p>
-                                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Events</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Events</p>
                             </div>
-                            <div className="bg-slate-50 px-4 py-2 rounded-lg border text-center">
-                                <p className="text-2xl font-bold text-primary">{pastAttendedEvents.length}</p>
-                                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Past Events</p>
+                            <div className="bg-slate-50 px-4 py-2 rounded-lg border text-center min-w-[100px]">
+                                <p className="text-2xl font-bold text-primary">{(user as any).followers.length}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Followers</p>
+                            </div>
+                            <div className="bg-slate-50 px-4 py-2 rounded-lg border text-center min-w-[100px]">
+                                <p className="text-2xl font-bold text-slate-800">{(user as any).following.length}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Following</p>
                             </div>
                         </div>
                     </div>
@@ -98,7 +137,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {pastAttendedEvents.map((event) => (
+                            {pastAttendedEvents.map((event: any) => (
                                 <Card key={event.id} className="group hover:border-black/50 transition-colors shadow-sm bg-white/80 backdrop-blur-sm">
                                     <Link href={`/events/${event.id}`} className="flex flex-col h-full">
                                         <CardHeader>
