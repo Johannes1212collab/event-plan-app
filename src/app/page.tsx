@@ -87,7 +87,7 @@ export default async function Home() {
                   <ThumbsUp className="h-8 w-8 text-cyan-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Organize with ease</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Organize with ease</h3>
                   <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                     Organize unique, personal, private events and share it amongst your close ones with a few easy clicks.
                   </p>
