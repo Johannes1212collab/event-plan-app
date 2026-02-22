@@ -171,34 +171,67 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset
             return [];
         }
 
-        return data.events_results.map((event: any): ScannedEvent => {
-            // Google Events provides relatively unstructured dates
-            // Attempt to build a real JS Date object out of the string, falling back to today if unable to parse cleanly
-            let parsedDate = new Date();
-            if (event.date?.start_date) {
-                // Often looks like "Feb 23"
-                parsedDate = new Date(`${event.date.start_date}, ${new Date().getFullYear()}`);
-                if (isNaN(parsedDate.getTime())) parsedDate = new Date();
-            }
+        const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-            return {
-                id: `ge_${event.title.replace(/\s+/g, '-').slice(0, 15)}_${Math.random()}`,
-                source: "Google Events" as any, // Typecast to bypass TS until the real type updates
-                title: event.title,
-                description: event.description || "View tickets and details via Google.",
-                url: event.link,
-                startDate: parsedDate,
-                displayTime: event.date?.when,
-                imageUrl: event.image || event.thumbnail,
-                location: {
-                    name: event.venue?.name || event.address?.join(", ") || "TBA",
-                    address: event.address?.join(", ") || "",
-                    lat, // Defaulting to search center since Google rarely provides explicit coordinates here
-                    lng,
-                },
-                isFree: false, // Cannot reliably determine pricing from SERP snippet
-            };
-        });
+        const processedEvents = await Promise.all(
+            data.events_results.map(async (event: any): Promise<ScannedEvent> => {
+                // Google Events provides relatively unstructured dates
+                // Attempt to build a real JS Date object out of the string, falling back to today if unable to parse cleanly
+                let parsedDate = new Date();
+                if (event.date?.start_date) {
+                    // Often looks like "Feb 23"
+                    parsedDate = new Date(`${event.date.start_date}, ${new Date().getFullYear()}`);
+                    if (isNaN(parsedDate.getTime())) parsedDate = new Date();
+                }
+
+                const locationName = event.venue?.name || event.address?.join(", ") || "TBA";
+                const locationAddress = event.address?.join(", ") || "";
+
+                let finalLat = lat;
+                let finalLng = lng;
+
+                // Google rarely provides explicit coordinates in the SERP snippet.
+                // We actively geocode the venue string back into precise coordinates here.
+                if (GOOGLE_MAPS_KEY && (locationAddress || locationName !== "TBA")) {
+                    const queryStr = locationAddress || locationName;
+                    try {
+                        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(queryStr)}&key=${GOOGLE_MAPS_KEY}`;
+                        // We don't cache this at the fetch level since Next.js cache can be slightly messy with millions of dynamic strings,
+                        // but we do limit the fetch timeout so one bad address doesn't hang the whole array
+                        const geoRes = await fetch(geocodeUrl, { signal: AbortSignal.timeout(3000) });
+                        if (geoRes.ok) {
+                            const geoData = await geoRes.json();
+                            if (geoData.results && geoData.results.length > 0) {
+                                finalLat = geoData.results[0].geometry.location.lat;
+                                finalLng = geoData.results[0].geometry.location.lng;
+                            }
+                        }
+                    } catch (e) {
+                        // Fail silently and fallback to search center if Geocoding API times out or fails
+                    }
+                }
+
+                return {
+                    id: `ge_${event.title.replace(/\s+/g, '-').slice(0, 15)}_${Math.random()}`,
+                    source: "Google Events" as any, // Typecast to bypass TS until the real type updates
+                    title: event.title,
+                    description: event.description || "View tickets and details via Google.",
+                    url: event.link,
+                    startDate: parsedDate,
+                    displayTime: event.date?.when,
+                    imageUrl: event.image || event.thumbnail,
+                    location: {
+                        name: locationName,
+                        address: locationAddress,
+                        lat: finalLat,
+                        lng: finalLng,
+                    },
+                    isFree: false, // Cannot reliably determine pricing from SERP snippet
+                };
+            })
+        );
+
+        return processedEvents;
 
     } catch (err) {
         throw new Error(`Failed to scrape Google Events: ${(err as Error).message}`);
