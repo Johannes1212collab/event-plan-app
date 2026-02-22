@@ -126,6 +126,15 @@ export const OnboardingTour = ({
                                 }
                             },
                             {
+                                element: "#event-polls",
+                                popover: {
+                                    title: "Activity Suggestions",
+                                    description: "Not sure where to eat? Create a poll and let the group vote on the best options.",
+                                    side: "top",
+                                    align: "start",
+                                }
+                            },
+                            {
                                 element: "#chat-paperclip",
                                 popover: {
                                     title: "Share Photos & Videos",

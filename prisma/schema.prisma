@@ -26,6 +26,7 @@ model User {
   hasSeenOnboarding Boolean @default(false)
   pushSubscriptions PushSubscription[]
   assignments   TaskAssignment[]
+  votes         PollVote[]
 }
 
 model Account {
@@ -73,6 +74,7 @@ model Event {
   participants Participant[]
   messages     Message[]
   tasks        EventTask[]
+  polls        Poll[]
 }
 
 model Participant {
@@ -142,4 +144,37 @@ model TaskAssignment {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, userId])
+}
+
+model Poll {
+  id               String       @id @default(cuid())
+  eventId          String
+  question         String
+  isMultipleChoice Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  closesAt         DateTime?
+
+  event            Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  options          PollOption[]
+}
+
+model PollOption {
+  id        String     @id @default(cuid())
+  pollId    String
+  text      String
+  
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  optionId  String
+  userId    String
+  createdAt DateTime   @default(now())
+
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId]) // A user can only vote for a specific option once
 }

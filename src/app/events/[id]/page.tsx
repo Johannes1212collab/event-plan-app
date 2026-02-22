@@ -19,6 +19,7 @@ import { AutoJoiner } from "@/components/events/auto-joiner";
 
 import { DeleteEventButton } from "@/components/events/delete-event-button";
 import { EventChecklist } from "@/components/events/event-checklist";
+import { EventPolls } from "@/components/events/event-polls";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     try {
@@ -243,6 +244,16 @@ const EventPage = async (props: EventPageProps) => {
                             <EventChecklist
                                 eventId={event.id}
                                 initialTasks={event.tasks as any}
+                                currentUserId={session.user.id}
+                                isHost={session.user.id === event.hostId}
+                            />
+                        )}
+
+                        {/* Event Polls */}
+                        {isParticipant && (
+                            <EventPolls
+                                eventId={event.id}
+                                initialPolls={event.polls as any}
                                 currentUserId={session.user.id}
                                 isHost={session.user.id === event.hostId}
                             />

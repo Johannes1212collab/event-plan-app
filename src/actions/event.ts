@@ -158,6 +158,18 @@ export const getEventById = async (id: string) => {
                 },
                 orderBy: { createdAt: "asc" }
             },
+            polls: {
+                include: {
+                    options: {
+                        include: {
+                            votes: {
+                                include: { user: true }
+                            }
+                        }
+                    }
+                },
+                orderBy: { createdAt: "desc" }
+            },
             messages: {
                 include: {
                     sender: {
