@@ -48,7 +48,7 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
                         <NotificationsManager />
                         <ShareSiteButton />
                         <span className="hidden sm:block text-sm font-medium text-slate-700 truncate max-w-none">
-                            <Link href={`/user/${session.user.id}`} className="hover:underline">
+                            <Link href={`/user/${session.user.id}`} className="hover:underline" id="user-profile-link">
                                 {session.user.name}
                             </Link>
                         </span>

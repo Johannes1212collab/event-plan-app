@@ -20,6 +20,10 @@ export const OnboardingTour = ({
         if (page === "discover") {
             const hasSeenScannerTour = localStorage.getItem("hasSeenScannerTour");
             if (hasSeenScannerTour) return;
+        } else if (page === "event") {
+            // Use localStorage for the event tour so it doesn't conflict with global DB dashboard onboarding
+            const hasSeenEventTour = localStorage.getItem("hasSeenEventTour");
+            if (hasSeenEventTour) return;
         } else {
             if (hasSeenOnboarding) return;
         }
@@ -38,6 +42,8 @@ export const OnboardingTour = ({
                     // Mark as seen when destroy (skip or finish)
                     if (page === "discover") {
                         localStorage.setItem("hasSeenScannerTour", "true");
+                    } else if (page === "event") {
+                        localStorage.setItem("hasSeenEventTour", "true");
                     } else {
                         completeOnboarding();
                     }
@@ -64,6 +70,21 @@ export const OnboardingTour = ({
                                 description: "Looking for something to do? Scan your area for public events to convert into private groups!",
                                 side: "bottom",
                                 align: "start",
+                            }
+                        },
+                        {
+                            element: "#user-profile-link",
+                            popover: {
+                                title: "Your User Profile",
+                                description: "Click your name here anytime to view your public profile, which showcases the history of past events you've attended.",
+                                side: "bottom",
+                                align: "end",
+                            }
+                        },
+                        {
+                            popover: {
+                                title: "Event Archiving & Image Requests",
+                                description: "To keep our servers fast, media from old events will be archived after a few weeks. Don't worry, thumbnails are kept! If you ever want the original high-res image back, you can 'Request Original' from the chat, and the owner will get a notification right here on the dashboard.",
                             }
                         }
                     ]
