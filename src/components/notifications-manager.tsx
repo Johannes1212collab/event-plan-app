@@ -130,6 +130,7 @@ export function NotificationsManager() {
 
     return (
         <button
+            id="notifications-bell"
             onClick={isSubscribed ? unsubscribeButtonOnClick : subscribeButtonOnClick}
             disabled={isLoading}
             className={`flex items-center gap-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${isLoading ? 'opacity-70 cursor-not-allowed bg-slate-100 text-slate-500 border-slate-200' :

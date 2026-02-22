@@ -9,6 +9,7 @@ import { Calendar, MapPin, ArrowLeft, UserPlus, UserMinus, Loader2 } from "lucid
 import { EditableAvatar } from "@/components/user/editable-avatar";
 import { toggleFollow } from "@/actions/follow";
 import { revalidatePath } from "next/cache";
+import { OnboardingTour } from "@/components/onboarding-tour";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -56,6 +57,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
     return (
         <div className="min-h-screen bg-slate-50">
+            <OnboardingTour hasSeenOnboarding={false} page="user" />
             <header className="bg-white border-b sticky top-0 z-10 px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/dashboard">
@@ -67,7 +69,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
             <main className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-xl shadow-sm border p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
-                    <div className="flex-shrink-0">
+                    <div id="profile-edit-avatar" className="flex-shrink-0">
                         <EditableAvatar
                             userId={user.id}
                             initialImage={user.image}
