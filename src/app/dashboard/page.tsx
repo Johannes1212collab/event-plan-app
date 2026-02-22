@@ -4,7 +4,7 @@ import { getEvents } from "@/actions/event";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Calendar, MapPin, Plus, LogOut } from "lucide-react";
+import { Calendar, MapPin, Plus, LogOut, User } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import db from "@/lib/db";
@@ -48,11 +48,19 @@ const DashboardPage = async ({ searchParams }: { searchParams: Promise<{ tab?: s
                     <div className="flex items-center gap-x-2 sm:gap-x-4">
                         <NotificationsManager />
                         <ShareSiteButton />
-                        <span className="hidden sm:block text-sm font-medium text-slate-700 truncate max-w-none">
-                            <Link href={`/user/${session.user.id}`} className="hover:underline" id="user-profile-link">
-                                {session.user.name}
+
+                        {/* Desktop Profile Link */}
+                        <Link href={`/user/${session.user.id}`} id="user-profile-link-desktop" className="hidden sm:inline-flex text-sm font-medium text-slate-700 truncate max-w-none hover:underline">
+                            {session.user.name}
+                        </Link>
+
+                        {/* Mobile Profile Link */}
+                        <Button variant="ghost" size="icon" asChild className="sm:hidden" id="user-profile-link" title="Profile">
+                            <Link href={`/user/${session.user.id}`}>
+                                <User className="h-4 w-4" />
                             </Link>
-                        </span>
+                        </Button>
+
                         <form action={async () => {
                             "use server";
                             await signOut({ redirectTo: "/login" });
