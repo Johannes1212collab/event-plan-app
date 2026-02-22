@@ -261,6 +261,17 @@ const EventPage = async (props: EventPageProps) => {
                             />
                         )}
 
+                        {/* Event Ledger */}
+                        {(event as any).isLedgerEnabled && isParticipant && (
+                            <div id="ledger-tab" className="bg-background rounded-xl border p-4 shadow-sm md:p-6 lg:p-8">
+                                <EventLedger
+                                    eventId={event.id}
+                                    currentUserId={session.user!.id}
+                                    participants={(event as any).participants}
+                                />
+                            </div>
+                        )}
+
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-base">Participants ({(event as any).participants.length})</CardTitle>
