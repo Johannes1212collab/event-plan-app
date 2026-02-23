@@ -17,9 +17,10 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<{ ev
     let hasMore = false;
 
     // Parallel execution of all our API scrapers
+    const googlePromise = fetchGoogleEvents(params);
     const results = await Promise.allSettled([
         Promise.resolve([]), // DISABLED: fetchEventfindaEvents(params), waiting for API KEY
-        fetchGoogleEvents(params),
+        googlePromise,
     ]);
 
     // Push successful Eventfinda hits
@@ -32,8 +33,8 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<{ ev
 
     // Push successful Google Events hits
     if (results[1].status === "fulfilled") {
-        events.push(...results[1].value);
-        if (results[1].value.length === 10) hasMore = true;
+        events.push(...results[1].value.events);
+        if (results[1].value.hasMore) hasMore = true;
     } else {
         console.error("Google Events Scraper Failed:", results[1].reason);
     }
@@ -47,6 +48,11 @@ export async function scanSurroundingEvents(params: ScannerParams): Promise<{ ev
     const filteredEvents = events.filter(e => {
         return e.startDate >= requestStart && e.startDate <= requestEnd;
     });
+
+    // Optimization: If a batch of events returns exclusively dates in the far future, stop crawling
+    if (events.length > 0 && events.every(e => e.startDate > requestEnd)) {
+        hasMore = false;
+    }
 
     // Sort chronologically by Start Date
     const finalEvents = filteredEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -123,12 +129,12 @@ async function fetchEventfindaEvents({ lat, lng, radiusKm, startDate, endDate }:
     }
 }
 
-async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset }: ScannerParams): Promise<ScannedEvent[]> {
+async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset }: ScannerParams): Promise<{ events: ScannedEvent[], hasMore: boolean }> {
     const API_KEY = process.env.SERPAPI_KEY;
 
     if (!API_KEY) {
         console.warn("SerpAPI key missing. Skipping Google Events scraper.");
-        return [];
+        return { events: [], hasMore: false };
     }
 
     const url = new URL("https://serpapi.com/search.json");
@@ -153,11 +159,18 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset
     }).format(startObj);
 
     // Google Events API fails if the address is a hyper-specific POI like a literal store unit.
-    // We truncate to the City/Region/Country to get a broad net of events.
-    const addressParts = address.split(',');
-    const generalLocation = addressParts.length > 2
-        ? addressParts.slice(-3).join(',').trim()
-        : address;
+    // We reverse-geocode to get a clean City/Region string
+    let generalLocation = address;
+    try {
+        const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+        if (GOOGLE_MAPS_KEY) {
+            const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&result_type=locality|administrative_area_level_1|administrative_area_level_2&key=${GOOGLE_MAPS_KEY}`, { signal: AbortSignal.timeout(3000) });
+            const geoData = await geoRes.json();
+            if (geoData.results && geoData.results.length > 0) {
+                generalLocation = geoData.results[0].formatted_address;
+            }
+        }
+    } catch (e) { }
 
     const searchQuery = `events near ${generalLocation} starting ${dateFormatted}`;
     url.searchParams.append("q", searchQuery);
@@ -178,8 +191,10 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset
         const data = await response.json();
 
         if (!data.events_results || !Array.isArray(data.events_results)) {
-            return [];
+            return { events: [], hasMore: false };
         }
+
+        const hasMore = !!data.serpapi_pagination?.next;
 
         const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -241,7 +256,7 @@ async function fetchGoogleEvents({ lat, lng, address, startDate, endDate, offset
             })
         );
 
-        return processedEvents;
+        return { events: processedEvents, hasMore };
 
     } catch (err) {
         throw new Error(`Failed to scrape Google Events: ${(err as Error).message}`);
