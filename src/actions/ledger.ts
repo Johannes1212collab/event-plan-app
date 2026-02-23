@@ -239,3 +239,65 @@ export async function getLedgerSummary(eventId: string) {
         return { error: "Failed to generate ledger summary." };
     }
 }
+
+/**
+ * Settles a debt between two participants by creating a specialized "Settlement" expense.
+ */
+export async function settleDebt(data: { eventId: string; debtorId: string; creditorId: string; amount: number }) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Unauthorized" };
+
+    try {
+        const event = await db.event.findUnique({
+            where: { id: data.eventId }
+        });
+
+        if (!event) return { error: "Event not found" };
+
+        const expense = await db.expense.create({
+            data: {
+                eventId: data.eventId,
+                paidById: data.debtorId,
+                amount: data.amount,
+                description: "Settled up",
+                isSettlement: true,
+                splits: {
+                    create: [
+                        {
+                            userId: data.creditorId,
+                            amount: data.amount
+                        }
+                    ]
+                }
+            },
+            include: {
+                paidBy: { select: { id: true, name: true, image: true } },
+                splits: { include: { user: { select: { id: true, name: true, image: true } } } }
+            }
+        });
+
+        revalidatePath(`/events/${data.eventId}`);
+
+        // Notify the creditor that they have been paid back
+        if (data.creditorId !== session.user.id) {
+            await sendPushNotification([data.creditorId], {
+                title: `Debt Settled: ${event.title}`,
+                body: `${session.user.name} settled their $${data.amount.toFixed(2)} debt with you.`,
+                url: `/events/${data.eventId}?tab=ledger`
+            });
+        }
+        // Notify the debtor if the creditor marked it as paid on their behalf
+        if (data.debtorId !== session.user.id) {
+            await sendPushNotification([data.debtorId], {
+                title: `Debt Marked as Settled: ${event.title}`,
+                body: `${session.user.name} marked your $${data.amount.toFixed(2)} debt as paid.`,
+                url: `/events/${data.eventId}?tab=ledger`
+            });
+        }
+
+        return { success: true, expense };
+    } catch (error) {
+        console.error("Error settling debt:", error);
+        return { error: "Failed to settle debt." };
+    }
+}

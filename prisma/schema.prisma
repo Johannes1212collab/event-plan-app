@@ -220,9 +220,10 @@ model Expense {
   id          String   @id @default(cuid())
   eventId     String
   paidById    String
-  amount      Float
-  description String
-  createdAt   DateTime @default(now())
+  amount       Float
+  description  String
+  isSettlement Boolean  @default(false)
+  createdAt    DateTime @default(now())
 
   event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   paidBy      User           @relation("paidBy", fields: [paidById], references: [id], onDelete: Cascade)

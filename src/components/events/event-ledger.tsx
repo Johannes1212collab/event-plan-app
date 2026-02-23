@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Receipt, ArrowRight, Trash2 } from "lucide-react";
-import { createExpense, deleteExpense, getLedgerSummary } from "@/actions/ledger";
+import { createExpense, deleteExpense, getLedgerSummary, settleDebt } from "@/actions/ledger";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
@@ -88,6 +88,18 @@ export const EventLedger = ({ eventId, currentUserId, participants }: EventLedge
         });
     };
 
+    const handleSettleDebt = (debtorId: string, creditorId: string, amount: number) => {
+        startTransition(async () => {
+            const result = await settleDebt({ eventId, debtorId, creditorId, amount });
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Debt marked as settled!");
+                loadLedger(); // Refresh graph
+            }
+        });
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center p-12">
@@ -121,8 +133,21 @@ export const EventLedger = ({ eventId, currentUserId, participants }: EventLedge
                                             {debt.to.id === currentUserId ? 'You' : debt.to.name}
                                         </span>
                                     </div>
-                                    <div className="font-bold text-lg text-slate-900 mt-2 sm:mt-0">
-                                        ${debt.amount.toFixed(2)}
+                                    <div className="flex flex-col items-end gap-2 mt-2 sm:mt-0">
+                                        <div className="font-bold text-lg text-slate-900">
+                                            ${debt.amount.toFixed(2)}
+                                        </div>
+                                        {(debt.from.id === currentUserId || debt.to.id === currentUserId) && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleSettleDebt(debt.from.id, debt.to.id, debt.amount)}
+                                                disabled={isPending}
+                                                className="h-7 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 border-emerald-200"
+                                            >
+                                                Settle Up
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -193,7 +218,10 @@ export const EventLedger = ({ eventId, currentUserId, participants }: EventLedge
                                     {expenses.map((expense) => (
                                         <div key={expense.id} className="flex justify-between items-start pb-4 border-b last:border-0 last:pb-0">
                                             <div>
-                                                <p className="font-medium text-slate-900">{expense.description}</p>
+                                                <p className="font-medium text-slate-900 flex items-center gap-2">
+                                                    {expense.description}
+                                                    {expense.isSettlement && <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-[10px] uppercase">Settlement</Badge>}
+                                                </p>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <span className="text-xs text-slate-500">Paid by {expense.paidById === currentUserId ? 'You' : expense.paidBy.name}</span>
                                                     <span className="text-xs text-slate-400">&bull;</span>
